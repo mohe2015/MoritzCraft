@@ -1,6 +1,9 @@
+use vulkano::buffer::{BufferUsage, CpuAccessibleBuffer};
+use vulkano::command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage};
 use vulkano::device::physical::PhysicalDevice;
 use vulkano::device::{Device, DeviceCreateInfo, Features, QueueCreateInfo};
 use vulkano::instance::{Instance, InstanceCreateInfo};
+use vulkano::sync::{self, GpuFuture};
 
 fn main() {
     println!("Hello, world!");
@@ -34,4 +37,43 @@ fn main() {
     .expect("failed to create device");
 
     let queue = queues.next().unwrap();
+
+    let source_content: Vec<i32> = (0..64).collect();
+    let source =
+        CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, source_content)
+            .expect("failed to create buffer");
+
+    let destination_content: Vec<i32> = (0..64).map(|_| 0).collect();
+    let destination = CpuAccessibleBuffer::from_iter(
+        device.clone(),
+        BufferUsage::all(),
+        false,
+        destination_content,
+    )
+    .expect("failed to create buffer");
+
+    let mut builder = AutoCommandBufferBuilder::primary(
+        device.clone(),
+        queue.family(),
+        CommandBufferUsage::OneTimeSubmit,
+    )
+    .unwrap();
+
+    builder
+        .copy_buffer(source.clone(), destination.clone())
+        .unwrap();
+
+    let command_buffer = builder.build().unwrap();
+
+    let future = sync::now(device.clone())
+        .then_execute(queue.clone(), command_buffer)
+        .unwrap()
+        .then_signal_fence_and_flush() // same as signal fence, and then flush
+        .unwrap();
+
+    future.wait(None).unwrap(); // None is an optional timeout
+
+    let src_content = source.read().unwrap();
+    let destination_content = destination.read().unwrap();
+    assert_eq!(&*src_content, &*destination_content);
 }
