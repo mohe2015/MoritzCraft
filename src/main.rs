@@ -3,6 +3,9 @@ use vulkano::command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage};
 use vulkano::descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet};
 use vulkano::device::physical::PhysicalDevice;
 use vulkano::device::{Device, DeviceCreateInfo, Features, QueueCreateInfo};
+use vulkano::format::ClearValue;
+use vulkano::format::Format;
+use vulkano::image::{ImageDimensions, StorageImage};
 use vulkano::instance::{Instance, InstanceCreateInfo};
 use vulkano::pipeline::ComputePipeline;
 use vulkano::pipeline::Pipeline;
@@ -157,4 +160,49 @@ fn main() {
     }
 
     println!("Everything succeeded!");
+
+    let image = StorageImage::new(
+        device.clone(),
+        ImageDimensions::Dim2d {
+            width: 1024,
+            height: 1024,
+            array_layers: 1, // images can be arrays of layers
+        },
+        Format::R8G8B8A8_UNORM,
+        Some(queue.family()),
+    )
+    .unwrap();
+
+    let mut builder = AutoCommandBufferBuilder::primary(
+        device.clone(),
+        queue.family(),
+        CommandBufferUsage::OneTimeSubmit,
+    )
+    .unwrap();
+
+    let buf = CpuAccessibleBuffer::from_iter(
+        device.clone(),
+        BufferUsage::all(),
+        false,
+        (0..1024 * 1024 * 4).map(|_| 0u8),
+    )
+    .expect("failed to create buffer");
+
+    builder
+        .clear_color_image(image.clone(), ClearValue::Float([0.0, 0.0, 1.0, 1.0]))
+        .unwrap()
+        .copy_image_to_buffer(image.clone(), buf.clone()) // new
+        .unwrap();
+
+    let command_buffer = builder.build().unwrap();
+
+    let future = sync::now(device.clone())
+        .then_execute(queue.clone(), command_buffer)
+        .unwrap()
+        .then_signal_fence_and_flush()
+        .unwrap();
+
+    future.wait(None).unwrap();
+
+    // TODO FIXME https://vulkano.rs/guide/image-export
 }
