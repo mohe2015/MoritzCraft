@@ -44,6 +44,10 @@ use winit::window::{Window, WindowBuilder};
 // https://github.com/khronosGroup/Vulkan-samples
 // https://github.com/SaschaWillems/Vulkan
 
+// TODO https://vulkan-tutorial.com/Uniform_buffers/Descriptor_layout_and_buffer
+// https://www.vulkan.org/learn#vulkan-tutorials
+// https://vkguide.dev/docs/chapter-3/triangle_mesh/
+
 #[repr(C)]
 #[derive(Default, Copy, Clone, Zeroable, Pod)]
 struct Vertex {
@@ -270,22 +274,22 @@ fn main() {
         false,
         vec![
             Vertex {
-                position: [0.5, 0.5, 0.0],//0.5],
+                position: [0.5, 0.5, 0.5],
             },
             Vertex {
-                position: [0.5, -0.5, 0.0],//0.5],
+                position: [0.5, -0.5, 0.5],
             },
             Vertex {
-                position: [-0.5, -0.5, 0.0],//-0.5],
+                position: [-0.5, -0.5, 0.5],
             },
             Vertex {
-                position: [-0.5, -0.5, 0.0],//-0.5],
+                position: [-0.5, -0.5, 0.5],
             },
             Vertex {
-                position: [-0.5, 0.5, 0.0],//-0.5],
+                position: [-0.5, 0.5, 0.5],
             },
             Vertex {
-                position: [0.5, 0.5, 0.0],//0.5],
+                position: [0.5, 0.5, 0.5],
             },
 
         ].into_iter(),
