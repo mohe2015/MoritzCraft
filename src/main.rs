@@ -11,6 +11,7 @@ use vulkano::pipeline::ComputePipeline;
 use vulkano::pipeline::Pipeline;
 use vulkano::pipeline::PipelineBindPoint;
 use vulkano::sync::{self, GpuFuture};
+use image::{ImageBuffer, Rgba};
 
 mod cs {
     vulkano_shaders::shader! {
@@ -205,4 +206,11 @@ fn main() {
     future.wait(None).unwrap();
 
     // TODO FIXME https://vulkano.rs/guide/image-export
+
+    let buffer_content = buf.read().unwrap();
+    let image = ImageBuffer::<Rgba<u8>, _>::from_raw(1024, 1024, &buffer_content[..]).unwrap();
+
+    image.save("image.png").unwrap();
+
+    println!("Everything succeeded!");
 }
