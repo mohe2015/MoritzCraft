@@ -38,10 +38,16 @@ use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::{Window, WindowBuilder};
 
+// https://github.com/bwasty/vulkan-tutorial-rs
+// https://vulkan-tutorial.com/Introduction
+// https://vulkan-tutorial.com/Uniform_buffers/Descriptor_layout_and_buffer
+// https://github.com/khronosGroup/Vulkan-samples
+// https://github.com/SaschaWillems/Vulkan
+
 #[repr(C)]
 #[derive(Default, Copy, Clone, Zeroable, Pod)]
 struct Vertex {
-    position: [f32; 2],
+    position: [f32; 3],
 }
 
 mod vs {
@@ -50,10 +56,10 @@ mod vs {
         src: "
 #version 450
 
-layout(location = 0) in vec2 position;
+layout(location = 0) in vec3 position;
 
 void main() {
-gl_Position = vec4(position, 0.0, 1.0);
+gl_Position = vec4(position, 1.0);
 }"
     }
 }
@@ -257,20 +263,32 @@ fn main() {
 
     vulkano::impl_vertex!(Vertex, position);
 
-    let vertex1 = Vertex {
-        position: [-0.5, -0.5],
-    };
-    let vertex2 = Vertex {
-        position: [0.0, 0.5],
-    };
-    let vertex3 = Vertex {
-        position: [0.5, -0.25],
-    };
+
     let vertex_buffer = CpuAccessibleBuffer::from_iter(
         device.clone(),
         BufferUsage::vertex_buffer(),
         false,
-        vec![vertex1, vertex2, vertex3].into_iter(),
+        vec![
+            Vertex {
+                position: [0.5, 0.5, 0.0],//0.5],
+            },
+            Vertex {
+                position: [0.5, -0.5, 0.0],//0.5],
+            },
+            Vertex {
+                position: [-0.5, -0.5, 0.0],//-0.5],
+            },
+            Vertex {
+                position: [-0.5, -0.5, 0.0],//-0.5],
+            },
+            Vertex {
+                position: [-0.5, 0.5, 0.0],//-0.5],
+            },
+            Vertex {
+                position: [0.5, 0.5, 0.0],//0.5],
+            },
+
+        ].into_iter(),
     )
     .unwrap();
 
