@@ -43,15 +43,17 @@ use winit::window::{Window, WindowBuilder};
 // https://vulkan-tutorial.com/Uniform_buffers/Descriptor_layout_and_buffer
 // https://github.com/khronosGroup/Vulkan-samples
 // https://github.com/SaschaWillems/Vulkan
+// https://vkguide.dev/docs/gpudriven/gpu_driven_engines/
 
 // TODO https://vulkan-tutorial.com/Uniform_buffers/Descriptor_layout_and_buffer
 // https://www.vulkan.org/learn#vulkan-tutorials
 // https://vkguide.dev/docs/chapter-3/triangle_mesh/
 
 #[repr(C)]
-#[derive(Default, Copy, Clone, Zeroable, Pod)]
+#[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
 struct Vertex {
     position: [f32; 3],
+    color: [f32; 3],
 }
 
 mod vs {
@@ -61,9 +63,13 @@ mod vs {
 #version 450
 
 layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 color;
+
+layout(location = 0) out vec3 fragColor;
 
 void main() {
 gl_Position = vec4(position, 1.0);
+fragColor = color;
 }"
     }
 }
@@ -74,10 +80,12 @@ mod fs {
         src: "
 #version 450
 
+layout(location = 0) in vec3 fragColor;
+
 layout(location = 0) out vec4 f_color;
 
 void main() {
-f_color = vec4(1.0, 0.0, 0.0, 1.0);
+f_color = vec4(fragColor, 1.0);
 }"
     }
 }
@@ -265,8 +273,7 @@ fn main() {
     let render_pass = get_render_pass(device.clone(), swapchain.clone());
     let framebuffers = get_framebuffers(&images, render_pass.clone());
 
-    vulkano::impl_vertex!(Vertex, position);
-
+    vulkano::impl_vertex!(Vertex, position, color);
 
     let vertex_buffer = CpuAccessibleBuffer::from_iter(
         device.clone(),
@@ -275,24 +282,30 @@ fn main() {
         vec![
             Vertex {
                 position: [0.5, 0.5, 0.5],
+                color: [1.0, 0.0, 0.0],
             },
             Vertex {
                 position: [0.5, -0.5, 0.5],
+                color: [1.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-0.5, -0.5, 0.5],
+                color: [1.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-0.5, -0.5, 0.5],
+                color: [1.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-0.5, 0.5, 0.5],
+                color: [0.0, 1.0, 0.0],
             },
             Vertex {
                 position: [0.5, 0.5, 0.5],
+                color: [1.0, 0.0, 0.0],
             },
-
-        ].into_iter(),
+        ]
+        .into_iter(),
     )
     .unwrap();
 
