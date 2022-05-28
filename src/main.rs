@@ -53,28 +53,35 @@ pub struct Vertex {
 
 impl_vertex!(Vertex, position);
 
-pub const VERTICES: [Vertex; 7] = [
+const SIZE: f32 = 10.0;
+
+// x to the right
+// y down
+// z inwards
+pub const VERTICES: [Vertex; 8] = [
     Vertex {
-        position: [0.0, 0.0, 0.0],
-    }, // dummy vector because in the original model indices
-    // start at 1
-    Vertex {
-        position: [40.6266, 28.3457, -1.10804],
+        position: [-SIZE, -SIZE, -SIZE],
     },
     Vertex {
-        position: [40.0714, 30.4443, -1.10804],
+        position: [SIZE, -SIZE, -SIZE],
     },
     Vertex {
-        position: [40.7155, 31.1438, -1.10804],
+        position: [SIZE, SIZE, -SIZE],
     },
     Vertex {
-        position: [42.0257, 30.4443, -1.10804],
+        position: [-SIZE, SIZE, -SIZE],
     },
     Vertex {
-        position: [43.4692, 28.3457, -1.10804],
+        position: [-SIZE, -SIZE, SIZE],
     },
     Vertex {
-        position: [37.5425, 28.3457, 14.5117],
+        position: [SIZE, -SIZE, SIZE],
+    },
+    Vertex {
+        position: [SIZE, SIZE, SIZE],
+    },
+    Vertex {
+        position: [-SIZE, SIZE, SIZE],
     },
 ];
 
@@ -86,22 +93,17 @@ pub struct Normal {
 
 impl_vertex!(Normal, normal);
 
-pub const NORMALS: [Normal; 3] = [
-    Normal {
-        normal: [0.0, 0.0, 0.0],
-    }, // dummy vector because in the original model indices
-    // start at 1
-    Normal {
-        normal: [-0.966742, -0.255752, 0.0],
-    },
-    Normal {
-        normal: [-0.966824, 0.255443, 0.0],
-    },
-];
+pub const NORMALS: [Normal; 1] = [Normal {
+    normal: [0.0, 0.0, 0.0],
+}];
 
-pub const INDICES: [u16; 42] = [
-    7, 6, 1, 1, 2, 7, 8, 7, 2, 2, 3, 8, 9, 8, 3, 3, 4, 9, 10, 9, 4, 4, 5, 10, 12, 11, 6, 6, 7, 12,
-    13, 12, 7, 7, 8, 13, 14, 13, 8, 8, 9, 14,
+pub const INDICES: [u16; 6 * 6] = [
+    0, 1, 2, 2, 3, 0, // front
+    4, 5, 6, 6, 7, 4, // back
+    0, 3, 7, 0, 4, 7, // left
+    1, 2, 5, 2, 5, 6, // right
+    0, 1, 4, 1, 4, 5, // top
+    2, 6, 7, 2, 3, 7, // bottom
 ];
 
 fn main() {
