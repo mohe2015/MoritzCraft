@@ -145,16 +145,16 @@ fn main() {
 
     let vertices = [
         Vertex {
-            position: [-0.2, -0.5],
+            position: [-0.5, -0.5],
         },
         Vertex {
-            position: [-0.5, 0.8],
+            position: [-0.5, 0.5],
         },
         Vertex {
-            position: [0.4, -0.5],
+            position: [0.5, -0.5],
         },
         Vertex {
-            position: [0.5, 0.2],
+            position: [0.5, 0.5],
         },
     ];
     let vertex_buffer = CpuAccessibleBuffer::<[Vertex]>::from_iter(
