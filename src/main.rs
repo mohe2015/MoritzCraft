@@ -217,7 +217,7 @@ fn main() {
         (ImageView::new_default(image).unwrap(), future)
     };
 
-    let sampler = Sampler::new(device.clone(), SamplerCreateInfo::simple_repeat_linear()).unwrap();
+    let sampler = Sampler::new(device.clone(), SamplerCreateInfo::default()).unwrap();
 
     let subpass = Subpass::from(render_pass.clone(), 0).unwrap();
     let pipeline = GraphicsPipeline::start()
