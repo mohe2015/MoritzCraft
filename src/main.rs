@@ -151,7 +151,7 @@ fn main() {
             tex_coord: [1.0, 0.0],
         },
         TexCoord {
-            tex_coord: [0.0, 1.0],
+            tex_coord: [0.0, 0.0],
         },
         TexCoord {
             tex_coord: [0.0, 0.0],
@@ -161,7 +161,7 @@ fn main() {
             tex_coord: [0.0, 0.0],
         },
         TexCoord {
-            tex_coord: [1.0, 1.0],
+            tex_coord: [0.0, 0.0],
         },
         TexCoord {
             tex_coord: [1.0, 0.0],
@@ -202,7 +202,7 @@ fn main() {
             tex_coord: [1.0, 0.0],
         },
         TexCoord {
-            tex_coord: [0.0, 1.0],
+            tex_coord: [0.0, 0.0],
         },
         TexCoord {
             tex_coord: [0.0, 0.0],
