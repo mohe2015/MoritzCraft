@@ -144,31 +144,31 @@ fn main() {
         N_BACK,
     ];
 
-    let TEXTURE_COORDINATES: Vec<TexCoord> = vec![TexCoord {
-        tex_coord: [0.0, 1.0],
-    }, TexCoord {
-        tex_coord: [1.0, 1.0],
-    }, TexCoord {
-        tex_coord: [1.0, 0.0],
-    }, TexCoord {
-        tex_coord: [0.0, 1.0],
-    }, TexCoord {
-        tex_coord: [1.0, 1.0],
-    }, TexCoord {
-        tex_coord: [1.0, 0.0],
-    }, TexCoord {
-        tex_coord: [0.0, 1.0],
-    }, TexCoord {
-        tex_coord: [1.0, 1.0],
-    }, TexCoord {
-        tex_coord: [1.0, 0.0],
-    },TexCoord {
-        tex_coord: [0.0, 1.0],
-    }, TexCoord {
-        tex_coord: [1.0, 1.0],
-    }, TexCoord {
-        tex_coord: [1.0, 0.0],
-    }];
+    let TEXTURE_COORDINATES: Vec<TexCoord> = repeat_element(
+        [
+            TexCoord {
+                tex_coord: [0.0, 1.0],
+            },
+            TexCoord {
+                tex_coord: [1.0, 1.0],
+            },
+            TexCoord {
+                tex_coord: [1.0, 0.0],
+            },
+            TexCoord {
+                tex_coord: [1.0, 0.0],
+            },
+            TexCoord {
+                tex_coord: [0.0, 0.0],
+            },
+            TexCoord {
+                tex_coord: [0.0, 1.0],
+            },
+        ]
+        .into_iter(),
+        6,
+    )
+    .collect();
 
     let INDICES: Vec<u16> = vec![
         0 * 3 + 2,
@@ -338,7 +338,7 @@ fn main() {
     .unwrap();
 
     let (texture, tex_future) = {
-        let png_bytes = include_bytes!("DON-SEAL.png").to_vec();
+        let png_bytes = include_bytes!("grass_block_side.png").to_vec();
         let cursor = Cursor::new(png_bytes);
         let decoder = png::Decoder::new(cursor);
         let mut reader = decoder.read_info().unwrap();
@@ -368,8 +368,8 @@ fn main() {
     let sampler = Sampler::new(
         device.clone(),
         SamplerCreateInfo {
-            mag_filter: Filter::Linear,
-            min_filter: Filter::Linear,
+            mag_filter: Filter::Nearest,
+            min_filter: Filter::Nearest,
             address_mode: [SamplerAddressMode::Repeat; 3],
             ..Default::default()
         },
