@@ -6,6 +6,20 @@ https://github.com/vulkano-rs/vulkano/tree/v0.29.0/examples/src/bin/teapot
 // the cube is a bad start
 // https://www.reddit.com/r/opengl/comments/4oozww/indexed_buffers_and_face_normals/
 
+// texture coordinate interpolation
+we currently have another problem but will soon have that problem
+
+https://www.khronos.org/opengl/wiki/Vertex_Shader
+User-defined output variables can have interpolation qualifiers (though these only matter if the output is being passed directly to the Vertex Post-Processing stage). Vertex shader outputs can also be aggregated into Interface Blocks.
+
+https://vulkan-tutorial.com/Texture_mapping/Images
+https://en.wikipedia.org/wiki/Texture_mapping
+
+https://stackoverflow.com/questions/15242507/perspective-correct-texturing-of-trapezoid-in-opengl-es-2-0
+https://stackoverflow.com/questions/10670092/perspective-correction-texture-interpolation-opengl
+
+https://www.khronos.org/opengl/wiki/Fragment_Shader
+
 // https://github.com/bwasty/vulkan-tutorial-rs
 // https://vulkan-tutorial.com/Introduction
 // https://vulkan-tutorial.com/Uniform_buffers/Descriptor_layout_and_buffer

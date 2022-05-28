@@ -147,22 +147,22 @@ fn main() {
     let TEXTURE_COORDINATES: Vec<TexCoord> = repeat_element(
         [
             TexCoord {
-                tex_coord: [0.0, 1.0],
+                tex_coord: [0.0, 0.0],
+            },
+            TexCoord {
+                tex_coord: [1.0, 0.0],
             },
             TexCoord {
                 tex_coord: [1.0, 1.0],
             },
             TexCoord {
-                tex_coord: [1.0, 0.0],
-            },
-            TexCoord {
-                tex_coord: [1.0, 0.0],
-            },
-            TexCoord {
-                tex_coord: [0.0, 0.0],
+                tex_coord: [1.0, 1.0],
             },
             TexCoord {
                 tex_coord: [0.0, 1.0],
+            },
+            TexCoord {
+                tex_coord: [0.0, 0.0],
             },
         ]
         .into_iter(),
