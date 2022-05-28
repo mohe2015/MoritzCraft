@@ -8,35 +8,31 @@
 // according to those terms.
 
 use bytemuck::{Pod, Zeroable};
-use std::{io::Cursor, sync::Arc};
+use cgmath::{Matrix3, Matrix4, Point3, Rad, Vector3};
+use std::{sync::Arc, time::Instant};
+use vulkano::impl_vertex;
 use vulkano::{
-    buffer::{BufferUsage, CpuAccessibleBuffer, TypedBufferAccess},
-    command_buffer::{
-        AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents,
-    },
+    buffer::{BufferUsage, CpuAccessibleBuffer, CpuBufferPool, TypedBufferAccess},
+    command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents},
     descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet},
     device::{
         physical::{PhysicalDevice, PhysicalDeviceType},
         Device, DeviceCreateInfo, DeviceExtensions, QueueCreateInfo,
     },
     format::Format,
-    image::{
-        view::ImageView, ImageAccess, ImageDimensions, ImageUsage, ImmutableImage, MipmapsCount,
-        SwapchainImage,
-    },
-    impl_vertex,
+    image::{view::ImageView, AttachmentImage, ImageAccess, ImageUsage, SwapchainImage},
     instance::{Instance, InstanceCreateInfo},
     pipeline::{
         graphics::{
-            color_blend::ColorBlendState,
-            input_assembly::{InputAssemblyState, PrimitiveTopology},
+            depth_stencil::DepthStencilState,
+            input_assembly::InputAssemblyState,
             vertex_input::BuffersDefinition,
             viewport::{Viewport, ViewportState},
         },
         GraphicsPipeline, Pipeline, PipelineBindPoint,
     },
     render_pass::{Framebuffer, FramebufferCreateInfo, RenderPass, Subpass},
-    sampler::{Sampler, SamplerCreateInfo},
+    shader::ShaderModule,
     swapchain::{
         acquire_next_image, AcquireError, Swapchain, SwapchainCreateInfo, SwapchainCreationError,
     },
@@ -49,11 +45,68 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
+pub struct Vertex {
+    position: [f32; 3],
+}
+
+impl_vertex!(Vertex, position);
+
+pub const VERTICES: [Vertex; 7] = [
+    Vertex {
+        position: [0.0, 0.0, 0.0],
+    }, // dummy vector because in the original model indices
+    // start at 1
+    Vertex {
+        position: [40.6266, 28.3457, -1.10804],
+    },
+    Vertex {
+        position: [40.0714, 30.4443, -1.10804],
+    },
+    Vertex {
+        position: [40.7155, 31.1438, -1.10804],
+    },
+    Vertex {
+        position: [42.0257, 30.4443, -1.10804],
+    },
+    Vertex {
+        position: [43.4692, 28.3457, -1.10804],
+    },
+    Vertex {
+        position: [37.5425, 28.3457, 14.5117],
+    },
+];
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
+pub struct Normal {
+    normal: [f32; 3],
+}
+
+impl_vertex!(Normal, normal);
+
+pub const NORMALS: [Normal; 3] = [
+    Normal {
+        normal: [0.0, 0.0, 0.0],
+    }, // dummy vector because in the original model indices
+    // start at 1
+    Normal {
+        normal: [-0.966742, -0.255752, 0.0],
+    },
+    Normal {
+        normal: [-0.966824, 0.255443, 0.0],
+    },
+];
+
+pub const INDICES: [u16; 42] = [
+    7, 6, 1, 1, 2, 7, 8, 7, 2, 2, 3, 8, 9, 8, 3, 3, 4, 9, 10, 9, 4, 4, 5, 10, 12, 11, 6, 6, 7, 12,
+    13, 12, 7, 7, 8, 13, 14, 13, 8, 8, 9, 14,
+];
+
 fn main() {
-    // This example is about this:
-    //     uniform sampler2DArray texture_array;
-    // And not this:
-    //     uniform sampler2D array_of_textures[42];
+    // The start of this example is exactly the same as `triangle`. You should read the
+    // `triangle` example if you haven't done so yet.
 
     let required_extensions = vulkano_win::required_extensions();
     let instance = Instance::new(InstanceCreateInfo {
@@ -104,6 +157,7 @@ fn main() {
         },
     )
     .unwrap();
+
     let queue = queues.next().unwrap();
 
     let (mut swapchain, images) = {
@@ -136,34 +190,15 @@ fn main() {
         .unwrap()
     };
 
-    #[repr(C)]
-    #[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
-    struct Vertex {
-        position: [f32; 2],
-    }
-    impl_vertex!(Vertex, position);
+    let vertex_buffer =
+        CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, VERTICES)
+            .unwrap();
+    let normals_buffer =
+        CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, NORMALS).unwrap();
+    let index_buffer =
+        CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, INDICES).unwrap();
 
-    let vertices = [
-        Vertex {
-            position: [-0.5, -0.5],
-        },
-        Vertex {
-            position: [-0.5, 0.5],
-        },
-        Vertex {
-            position: [0.5, -0.5],
-        },
-        Vertex {
-            position: [0.5, 0.5],
-        },
-    ];
-    let vertex_buffer = CpuAccessibleBuffer::<[Vertex]>::from_iter(
-        device.clone(),
-        BufferUsage::all(),
-        false,
-        vertices,
-    )
-    .unwrap();
+    let uniform_buffer = CpuBufferPool::<vs::ty::Data>::new(device.clone(), BufferUsage::all());
 
     let vs = vs::load(device.clone()).unwrap();
     let fs = fs::load(device.clone()).unwrap();
@@ -175,249 +210,251 @@ fn main() {
                 store: Store,
                 format: swapchain.image_format(),
                 samples: 1,
+            },
+            depth: {
+                load: Clear,
+                store: DontCare,
+                format: Format::D16_UNORM,
+                samples: 1,
             }
         },
         pass: {
             color: [color],
-            depth_stencil: {}
+            depth_stencil: {depth}
         }
     )
     .unwrap();
 
-    let (texture, tex_future) = {
-        let image_array_data: Vec<_> = vec![
-            include_bytes!("grass_block_side.png").to_vec(),
-            include_bytes!("grass_block_side.png").to_vec(),
-        ]
-        .into_iter()
-        .flat_map(|png_bytes| {
-            let cursor = Cursor::new(png_bytes);
-            let decoder = png::Decoder::new(cursor);
-            let mut reader = decoder.read_info().unwrap();
-            let info = reader.info();
-            let mut image_data = Vec::new();
-            image_data.resize((info.width * info.height * 4) as usize, 0);
-            reader.next_frame(&mut image_data).unwrap();
-            image_data
-        })
-        .collect();
-        let dimensions = ImageDimensions::Dim2d {
-            width: 16,
-            height: 16,
-            array_layers: 2,
-        }; // TODO replace with your actual image array dimensions
-        let (image, future) = ImmutableImage::from_iter(
-            image_array_data,
-            dimensions,
-            MipmapsCount::Log2,
-            Format::R8G8B8A8_SRGB,
-            queue.clone(),
-        )
-        .unwrap();
-        (ImageView::new_default(image).unwrap(), future)
-    };
-
-    let sampler = Sampler::new(device.clone(), SamplerCreateInfo::default()).unwrap();
-
-    let subpass = Subpass::from(render_pass.clone(), 0).unwrap();
-    let pipeline = GraphicsPipeline::start()
-        .vertex_input_state(BuffersDefinition::new().vertex::<Vertex>())
-        .vertex_shader(vs.entry_point("main").unwrap(), ())
-        .input_assembly_state(InputAssemblyState::new().topology(PrimitiveTopology::TriangleStrip))
-        .viewport_state(ViewportState::viewport_dynamic_scissor_irrelevant())
-        .fragment_shader(fs.entry_point("main").unwrap(), ())
-        .color_blend_state(ColorBlendState::new(subpass.num_color_attachments()).blend_alpha())
-        .render_pass(subpass)
-        .build(device.clone())
-        .unwrap();
-
-    let layout = pipeline.layout().set_layouts().get(0).unwrap();
-    let set = PersistentDescriptorSet::new(
-        layout.clone(),
-        [WriteDescriptorSet::image_view_sampler(
-            0,
-            texture.clone(),
-            sampler.clone(),
-        )],
-    )
-    .unwrap();
-
-    let mut viewport = Viewport {
-        origin: [0.0, 0.0],
-        dimensions: [0.0, 0.0],
-        depth_range: 0.0..1.0,
-    };
-    let mut framebuffers = window_size_dependent_setup(&images, render_pass.clone(), &mut viewport);
-
+    let (mut pipeline, mut framebuffers) =
+        window_size_dependent_setup(device.clone(), &vs, &fs, &images, render_pass.clone());
     let mut recreate_swapchain = false;
-    let mut previous_frame_end = Some(tex_future.boxed());
 
-    event_loop.run(move |event, _, control_flow| match event {
-        Event::WindowEvent {
-            event: WindowEvent::CloseRequested,
-            ..
-        } => {
-            *control_flow = ControlFlow::Exit;
-        }
-        Event::WindowEvent {
-            event: WindowEvent::Resized(_),
-            ..
-        } => {
-            recreate_swapchain = true;
-        }
-        Event::RedrawEventsCleared => {
-            let dimensions = surface.window().inner_size();
-            if dimensions.width == 0 || dimensions.height == 0 {
-                return;
+    let mut previous_frame_end = Some(sync::now(device.clone()).boxed());
+    let rotation_start = Instant::now();
+
+    event_loop.run(move |event, _, control_flow| {
+        match event {
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => {
+                *control_flow = ControlFlow::Exit;
             }
-
-            previous_frame_end.as_mut().unwrap().cleanup_finished();
-
-            if recreate_swapchain {
-                let (new_swapchain, new_images) = match swapchain.recreate(SwapchainCreateInfo {
-                    image_extent: dimensions.into(),
-                    ..swapchain.create_info()
-                }) {
-                    Ok(r) => r,
-                    Err(SwapchainCreationError::ImageExtentNotSupported { .. }) => return,
-                    Err(e) => panic!("Failed to recreate swapchain: {:?}", e),
-                };
-
-                swapchain = new_swapchain;
-                framebuffers =
-                    window_size_dependent_setup(&new_images, render_pass.clone(), &mut viewport);
-                recreate_swapchain = false;
-            }
-
-            let (image_num, suboptimal, acquire_future) =
-                match acquire_next_image(swapchain.clone(), None) {
-                    Ok(r) => r,
-                    Err(AcquireError::OutOfDate) => {
-                        recreate_swapchain = true;
-                        return;
-                    }
-                    Err(e) => panic!("Failed to acquire next image: {:?}", e),
-                };
-
-            if suboptimal {
+            Event::WindowEvent {
+                event: WindowEvent::Resized(_),
+                ..
+            } => {
                 recreate_swapchain = true;
             }
+            Event::RedrawEventsCleared => {
+                previous_frame_end.as_mut().unwrap().cleanup_finished();
 
-            let mut builder = AutoCommandBufferBuilder::primary(
-                device.clone(),
-                queue.family(),
-                CommandBufferUsage::OneTimeSubmit,
-            )
-            .unwrap();
-            builder
-                .begin_render_pass(
-                    framebuffers[image_num].clone(),
-                    SubpassContents::Inline,
-                    vec![[0.0, 0.0, 1.0, 1.0].into()]
+                if recreate_swapchain {
+                    let (new_swapchain, new_images) =
+                        match swapchain.recreate(SwapchainCreateInfo {
+                            image_extent: surface.window().inner_size().into(),
+                            ..swapchain.create_info()
+                        }) {
+                            Ok(r) => r,
+                            Err(SwapchainCreationError::ImageExtentNotSupported { .. }) => return,
+                            Err(e) => panic!("Failed to recreate swapchain: {:?}", e),
+                        };
+
+                    swapchain = new_swapchain;
+                    let (new_pipeline, new_framebuffers) = window_size_dependent_setup(
+                        device.clone(),
+                        &vs,
+                        &fs,
+                        &new_images,
+                        render_pass.clone(),
+                    );
+                    pipeline = new_pipeline;
+                    framebuffers = new_framebuffers;
+                    recreate_swapchain = false;
+                }
+
+                let uniform_buffer_subbuffer = {
+                    let elapsed = rotation_start.elapsed();
+                    let rotation =
+                        elapsed.as_secs() as f64 + elapsed.subsec_nanos() as f64 / 1_000_000_000.0;
+                    let rotation = Matrix3::from_angle_y(Rad(rotation as f32));
+
+                    // note: this teapot was meant for OpenGL where the origin is at the lower left
+                    //       instead the origin is at the upper left in Vulkan, so we reverse the Y axis
+                    let aspect_ratio =
+                        swapchain.image_extent()[0] as f32 / swapchain.image_extent()[1] as f32;
+                    let proj = cgmath::perspective(
+                        Rad(std::f32::consts::FRAC_PI_2),
+                        aspect_ratio,
+                        0.01,
+                        100.0,
+                    );
+                    let view = Matrix4::look_at_rh(
+                        Point3::new(0.3, 0.3, 1.0),
+                        Point3::new(0.0, 0.0, 0.0),
+                        Vector3::new(0.0, -1.0, 0.0),
+                    );
+                    let scale = Matrix4::from_scale(0.01);
+
+                    let uniform_data = vs::ty::Data {
+                        world: Matrix4::from(rotation).into(),
+                        view: (view * scale).into(),
+                        proj: proj.into(),
+                    };
+
+                    uniform_buffer.next(uniform_data).unwrap()
+                };
+
+                let layout = pipeline.layout().set_layouts().get(0).unwrap();
+                let set = PersistentDescriptorSet::new(
+                    layout.clone(),
+                    [WriteDescriptorSet::buffer(0, uniform_buffer_subbuffer)],
                 )
-                .unwrap()
-                .set_viewport(0, [viewport.clone()])
-                .bind_pipeline_graphics(pipeline.clone())
-                .bind_descriptor_sets(
-                    PipelineBindPoint::Graphics,
-                    pipeline.layout().clone(),
-                    0,
-                    set.clone(),
-                )
-                .bind_vertex_buffers(0, vertex_buffer.clone())
-                .draw(vertex_buffer.len() as u32, 1, 0, 0)
-                .unwrap()
-                .end_render_pass()
                 .unwrap();
-            let command_buffer = builder.build().unwrap();
 
-            let future = previous_frame_end
-                .take()
-                .unwrap()
-                .join(acquire_future)
-                .then_execute(queue.clone(), command_buffer)
-                .unwrap()
-                .then_swapchain_present(queue.clone(), swapchain.clone(), image_num)
-                .then_signal_fence_and_flush();
+                let (image_num, suboptimal, acquire_future) =
+                    match acquire_next_image(swapchain.clone(), None) {
+                        Ok(r) => r,
+                        Err(AcquireError::OutOfDate) => {
+                            recreate_swapchain = true;
+                            return;
+                        }
+                        Err(e) => panic!("Failed to acquire next image: {:?}", e),
+                    };
 
-            match future {
-                Ok(future) => {
-                    previous_frame_end = Some(future.boxed());
-                }
-                Err(FlushError::OutOfDate) => {
+                if suboptimal {
                     recreate_swapchain = true;
-                    previous_frame_end = Some(sync::now(device.clone()).boxed());
                 }
-                Err(e) => {
-                    println!("Failed to flush future: {:?}", e);
-                    previous_frame_end = Some(sync::now(device.clone()).boxed());
+
+                let mut builder = AutoCommandBufferBuilder::primary(
+                    device.clone(),
+                    queue.family(),
+                    CommandBufferUsage::OneTimeSubmit,
+                )
+                .unwrap();
+                builder
+                    .begin_render_pass(
+                        framebuffers[image_num].clone(),
+                        SubpassContents::Inline,
+                        vec![[0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
+                    )
+                    .unwrap()
+                    .bind_pipeline_graphics(pipeline.clone())
+                    .bind_descriptor_sets(
+                        PipelineBindPoint::Graphics,
+                        pipeline.layout().clone(),
+                        0,
+                        set.clone(),
+                    )
+                    .bind_vertex_buffers(0, (vertex_buffer.clone(), normals_buffer.clone()))
+                    .bind_index_buffer(index_buffer.clone())
+                    .draw_indexed(index_buffer.len() as u32, 1, 0, 0, 0)
+                    .unwrap()
+                    .end_render_pass()
+                    .unwrap();
+                let command_buffer = builder.build().unwrap();
+
+                let future = previous_frame_end
+                    .take()
+                    .unwrap()
+                    .join(acquire_future)
+                    .then_execute(queue.clone(), command_buffer)
+                    .unwrap()
+                    .then_swapchain_present(queue.clone(), swapchain.clone(), image_num)
+                    .then_signal_fence_and_flush();
+
+                match future {
+                    Ok(future) => {
+                        previous_frame_end = Some(future.boxed());
+                    }
+                    Err(FlushError::OutOfDate) => {
+                        recreate_swapchain = true;
+                        previous_frame_end = Some(sync::now(device.clone()).boxed());
+                    }
+                    Err(e) => {
+                        println!("Failed to flush future: {:?}", e);
+                        previous_frame_end = Some(sync::now(device.clone()).boxed());
+                    }
                 }
             }
+            _ => (),
         }
-        _ => (),
     });
 }
 
 /// This method is called once during initialization, then again whenever the window is resized
 fn window_size_dependent_setup(
+    device: Arc<Device>,
+    vs: &ShaderModule,
+    fs: &ShaderModule,
     images: &[Arc<SwapchainImage<Window>>],
     render_pass: Arc<RenderPass>,
-    viewport: &mut Viewport,
-) -> Vec<Arc<Framebuffer>> {
+) -> (Arc<GraphicsPipeline>, Vec<Arc<Framebuffer>>) {
     let dimensions = images[0].dimensions().width_height();
-    viewport.dimensions = [dimensions[0] as f32, dimensions[1] as f32];
 
-    images
+    let depth_buffer = ImageView::new_default(
+        AttachmentImage::transient(device.clone(), dimensions, Format::D16_UNORM).unwrap(),
+    )
+    .unwrap();
+
+    let framebuffers = images
         .iter()
         .map(|image| {
             let view = ImageView::new_default(image.clone()).unwrap();
             Framebuffer::new(
                 render_pass.clone(),
                 FramebufferCreateInfo {
-                    attachments: vec![view],
+                    attachments: vec![view, depth_buffer.clone()],
                     ..Default::default()
                 },
             )
             .unwrap()
         })
-        .collect::<Vec<_>>()
+        .collect::<Vec<_>>();
+
+    // In the triangle example we use a dynamic viewport, as its a simple example.
+    // However in the teapot example, we recreate the pipelines with a hardcoded viewport instead.
+    // This allows the driver to optimize things, at the cost of slower window resizes.
+    // https://computergraphics.stackexchange.com/questions/5742/vulkan-best-way-of-updating-pipeline-viewport
+    let pipeline = GraphicsPipeline::start()
+        .vertex_input_state(
+            BuffersDefinition::new()
+                .vertex::<Vertex>()
+                .vertex::<Normal>(),
+        )
+        .vertex_shader(vs.entry_point("main").unwrap(), ())
+        .input_assembly_state(InputAssemblyState::new())
+        .viewport_state(ViewportState::viewport_fixed_scissor_irrelevant([
+            Viewport {
+                origin: [0.0, 0.0],
+                dimensions: [dimensions[0] as f32, dimensions[1] as f32],
+                depth_range: 0.0..1.0,
+            },
+        ]))
+        .fragment_shader(fs.entry_point("main").unwrap(), ())
+        .depth_stencil_state(DepthStencilState::simple_depth_test())
+        .render_pass(Subpass::from(render_pass.clone(), 0).unwrap())
+        .build(device.clone())
+        .unwrap();
+
+    (pipeline, framebuffers)
 }
 
 mod vs {
     vulkano_shaders::shader! {
         ty: "vertex",
-        src: "
-#version 450
+        path: "src/vert.glsl",
+        types_meta: {
+            use bytemuck::{Pod, Zeroable};
 
-layout(location = 0) in vec2 position;
-layout(location = 0) out vec2 tex_coords;
-layout(location = 1) out uint layer;
-
-const float x[4] = float[](0.0, 0.0, 1.0, 1.0);
-const float y[4] = float[](0.0, 1.0, 0.0, 1.0);
-
-void main() {
-    gl_Position = vec4(position, 0.0, 1.0);
-    tex_coords = vec2(x[gl_VertexIndex], y[gl_VertexIndex]);
-    layer = gl_InstanceIndex;
-}"
+            #[derive(Clone, Copy, Zeroable, Pod)]
+        },
     }
 }
 
 mod fs {
     vulkano_shaders::shader! {
         ty: "fragment",
-        src: "
-#version 450
-
-layout(location = 0) in vec2 tex_coords;
-layout(location = 1) flat in uint layer;
-layout(location = 0) out vec4 f_color;
-
-layout(set = 0, binding = 0) uniform sampler2DArray tex;
-
-void main() {
-    f_color = texture(tex, vec3(tex_coords, layer));
-}"
+        path: "src/frag.glsl"
     }
 }
