@@ -145,7 +145,29 @@ fn main() {
     ];
 
     let TEXTURE_COORDINATES: Vec<TexCoord> = vec![TexCoord {
-        tex_coord: [0.0, 0.0],
+        tex_coord: [0.0, 1.0],
+    }, TexCoord {
+        tex_coord: [1.0, 1.0],
+    }, TexCoord {
+        tex_coord: [1.0, 0.0],
+    }, TexCoord {
+        tex_coord: [0.0, 1.0],
+    }, TexCoord {
+        tex_coord: [1.0, 1.0],
+    }, TexCoord {
+        tex_coord: [1.0, 0.0],
+    }, TexCoord {
+        tex_coord: [0.0, 1.0],
+    }, TexCoord {
+        tex_coord: [1.0, 1.0],
+    }, TexCoord {
+        tex_coord: [1.0, 0.0],
+    },TexCoord {
+        tex_coord: [0.0, 1.0],
+    }, TexCoord {
+        tex_coord: [1.0, 1.0],
+    }, TexCoord {
+        tex_coord: [1.0, 0.0],
     }];
 
     let INDICES: Vec<u16> = vec![
@@ -316,7 +338,7 @@ fn main() {
     .unwrap();
 
     let (texture, tex_future) = {
-        let png_bytes = include_bytes!("grass_block_side.png").to_vec();
+        let png_bytes = include_bytes!("DON-SEAL.png").to_vec();
         let cursor = Cursor::new(png_bytes);
         let decoder = png::Decoder::new(cursor);
         let mut reader = decoder.read_info().unwrap();
@@ -328,7 +350,9 @@ fn main() {
         };
         let mut image_data = Vec::new();
         image_data.resize((info.width * info.height * 4) as usize, 0);
-        reader.next_frame(&mut image_data).unwrap();
+        let output = reader.next_frame(&mut image_data).unwrap();
+
+        println!("{:?}", output);
 
         let (image, future) = ImmutableImage::from_iter(
             image_data,

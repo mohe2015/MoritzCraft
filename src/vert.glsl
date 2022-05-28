@@ -17,5 +17,5 @@ void main() {
     mat4 worldview = uniforms.view * uniforms.world;
     v_normal = transpose(inverse(mat3(worldview))) * normal;
     gl_Position = uniforms.proj * worldview * vec4(position, 1.0);
-    v_tex_coord = tex_coord;
+    v_tex_coord = position.xy/20.0; //tex_coord;
 }
