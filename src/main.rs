@@ -58,32 +58,10 @@ const SIZE: f32 = 10.0;
 // x to the right
 // y down
 // z inwards
-pub const VERTICES: [Vertex; 8] = [
-    Vertex {
-        position: [-SIZE, -SIZE, -SIZE],
-    },
-    Vertex {
-        position: [SIZE, -SIZE, -SIZE],
-    },
-    Vertex {
-        position: [SIZE, SIZE, -SIZE],
-    },
-    Vertex {
-        position: [-SIZE, SIZE, -SIZE],
-    },
-    Vertex {
-        position: [-SIZE, -SIZE, SIZE],
-    },
-    Vertex {
-        position: [SIZE, -SIZE, SIZE],
-    },
-    Vertex {
-        position: [SIZE, SIZE, SIZE],
-    },
-    Vertex {
-        position: [-SIZE, SIZE, SIZE],
-    },
-];
+
+fn repeat_element<T: Clone>(it: impl Iterator<Item = T>, cnt: usize) -> impl Iterator<Item = T> {
+    it.flat_map(move |n| std::iter::repeat(n).take(cnt))
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
@@ -93,9 +71,20 @@ pub struct Normal {
 
 impl_vertex!(Normal, normal);
 
-pub const NORMALS: [Normal; 1] = [Normal {
-    normal: [0.0, 0.0, 0.0],
-}];
+pub const NORMALS: [Normal; 4] = [
+    Normal {
+        normal: [0.0, 0.0, -SIZE],
+    },
+    Normal {
+        normal: [0.0, 0.0, -SIZE],
+    },
+    Normal {
+        normal: [0.0, 0.0, -SIZE],
+    },
+    Normal {
+        normal: [0.0, 0.0, -SIZE],
+    },
+];
 
 pub const INDICES: [u16; 6 * 6] = [
     0, 1, 2, 2, 3, 0, // front
@@ -107,6 +96,39 @@ pub const INDICES: [u16; 6 * 6] = [
 ];
 
 fn main() {
+    // every vertex is duplicated three times for the three normal directions
+    let VERTICES: Vec<Vertex> = repeat_element(
+        [
+            Vertex {
+                position: [-SIZE, -SIZE, -SIZE],
+            },
+            Vertex {
+                position: [SIZE, -SIZE, -SIZE],
+            },
+            Vertex {
+                position: [SIZE, SIZE, -SIZE],
+            },
+            Vertex {
+                position: [-SIZE, SIZE, -SIZE],
+            },
+            Vertex {
+                position: [-SIZE, -SIZE, SIZE],
+            },
+            Vertex {
+                position: [SIZE, -SIZE, SIZE],
+            },
+            Vertex {
+                position: [SIZE, SIZE, SIZE],
+            },
+            Vertex {
+                position: [-SIZE, SIZE, SIZE],
+            },
+        ]
+        .into_iter(),
+        3,
+    )
+    .collect();
+
     // The start of this example is exactly the same as `triangle`. You should read the
     // `triangle` example if you haven't done so yet.
 

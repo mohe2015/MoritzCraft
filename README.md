@@ -3,6 +3,8 @@ https://github.com/vulkano-rs/vulkano/blob/v0.29.0/examples/src/bin/image/main.r
 https://github.com/vulkano-rs/vulkano/blob/v0.29.0/examples/src/bin/instancing.rs
 https://github.com/vulkano-rs/vulkano/tree/v0.29.0/examples/src/bin/teapot
 
+// the cube is a bad start
+// https://www.reddit.com/r/opengl/comments/4oozww/indexed_buffers_and_face_normals/
 
 // https://github.com/bwasty/vulkan-tutorial-rs
 // https://vulkan-tutorial.com/Introduction
