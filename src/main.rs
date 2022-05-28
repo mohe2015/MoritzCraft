@@ -71,20 +71,6 @@ pub struct Normal {
 
 impl_vertex!(Normal, normal);
 
-pub const NORMALS: [Normal; 4] = [
-    Normal {
-        normal: [0.0, 0.0, -SIZE],
-    },
-    Normal {
-        normal: [0.0, 0.0, -SIZE],
-    },
-    Normal {
-        normal: [0.0, 0.0, -SIZE],
-    },
-    Normal {
-        normal: [0.0, 0.0, -SIZE],
-    },
-];
 
 pub const INDICES: [u16; 6 * 6] = [
     0, 1, 2, 2, 3, 0, // front
@@ -128,6 +114,29 @@ fn main() {
         3,
     )
     .collect();
+
+    const N_TOP: Normal = Normal {
+        normal: [0.0, -SIZE, 0.0],
+    };
+    const N_BOTTOM: Normal = Normal {
+        normal: [0.0, SIZE, 0.0],
+    };
+    const N_LEFT: Normal = Normal {
+        normal: [-SIZE, 0.0, 0.0],
+    };
+    const N_RIGHT: Normal = Normal {
+        normal: [SIZE, 0.0, 0.0],
+    };
+    const N_FRONT: Normal = Normal {
+        normal: [0.0, 0.0, -SIZE],
+    };
+    const N_BACK: Normal = Normal {
+        normal: [0.0, 0.0, SIZE],
+    };
+
+    const NORMALS: [Normal; 4] = [
+        N_TOP
+    ];
 
     // The start of this example is exactly the same as `triangle`. You should read the
     // `triangle` example if you haven't done so yet.
