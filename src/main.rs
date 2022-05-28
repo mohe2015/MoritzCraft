@@ -9,8 +9,11 @@
 
 use bytemuck::{Pod, Zeroable};
 use cgmath::{Matrix3, Matrix4, Point3, Rad, Vector3};
+use std::io::Cursor;
 use std::{sync::Arc, time::Instant};
+use vulkano::image::{ImageDimensions, ImmutableImage, MipmapsCount};
 use vulkano::impl_vertex;
+use vulkano::sampler::{Filter, Sampler, SamplerAddressMode, SamplerCreateInfo};
 use vulkano::{
     buffer::{BufferUsage, CpuAccessibleBuffer, CpuBufferPool, TypedBufferAccess},
     command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents},
@@ -70,6 +73,15 @@ pub struct Normal {
 }
 
 impl_vertex!(Normal, normal);
+
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
+pub struct TexCoord {
+    tex_coord: [f32; 2],
+}
+
+impl_vertex!(TexCoord, tex_coord);
 
 fn main() {
     // TODO to render a cube we only need the three visible faces
@@ -292,11 +304,48 @@ fn main() {
     )
     .unwrap();
 
+    let (texture, tex_future) = {
+        let png_bytes = include_bytes!("grass_block_side.png").to_vec();
+        let cursor = Cursor::new(png_bytes);
+        let decoder = png::Decoder::new(cursor);
+        let mut reader = decoder.read_info().unwrap();
+        let info = reader.info();
+        let dimensions = ImageDimensions::Dim2d {
+            width: info.width,
+            height: info.height,
+            array_layers: 1,
+        };
+        let mut image_data = Vec::new();
+        image_data.resize((info.width * info.height * 4) as usize, 0);
+        reader.next_frame(&mut image_data).unwrap();
+
+        let (image, future) = ImmutableImage::from_iter(
+            image_data,
+            dimensions,
+            MipmapsCount::One,
+            Format::R8G8B8A8_SRGB,
+            queue.clone(),
+        )
+        .unwrap();
+        (ImageView::new_default(image).unwrap(), future)
+    };
+
+    let sampler = Sampler::new(
+        device.clone(),
+        SamplerCreateInfo {
+            mag_filter: Filter::Linear,
+            min_filter: Filter::Linear,
+            address_mode: [SamplerAddressMode::Repeat; 3],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+
     let (mut pipeline, mut framebuffers) =
         window_size_dependent_setup(device.clone(), &vs, &fs, &images, render_pass.clone());
     let mut recreate_swapchain = false;
 
-    let mut previous_frame_end = Some(sync::now(device.clone()).boxed());
+    let mut previous_frame_end = Some(tex_future.boxed());
     let rotation_start = Instant::now();
 
     event_loop.run(move |event, _, control_flow| {
@@ -375,7 +424,10 @@ fn main() {
                 let layout = pipeline.layout().set_layouts().get(0).unwrap();
                 let set = PersistentDescriptorSet::new(
                     layout.clone(),
-                    [WriteDescriptorSet::buffer(0, uniform_buffer_subbuffer)],
+                    [
+                        WriteDescriptorSet::buffer(0, uniform_buffer_subbuffer),
+                        WriteDescriptorSet::image_view_sampler(1, texture.clone(), sampler.clone()),
+                    ],
                 )
                 .unwrap();
 
@@ -487,7 +539,8 @@ fn window_size_dependent_setup(
         .vertex_input_state(
             BuffersDefinition::new()
                 .vertex::<Vertex>()
-                .vertex::<Normal>(),
+                .vertex::<Normal>()
+                .vertex::<TexCoord>(),
         )
         .vertex_shader(vs.entry_point("main").unwrap(), ())
         .input_assembly_state(InputAssemblyState::new())
