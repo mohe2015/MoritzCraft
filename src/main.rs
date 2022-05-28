@@ -439,8 +439,9 @@ fn main() {
                 )
                 .unwrap();
 
+                let layout2 = pipeline.layout().set_layouts().get(1).unwrap();
                 let set2 = PersistentDescriptorSet::new(
-                    layout.clone(),
+                    layout2.clone(),
                     [WriteDescriptorSet::image_view_sampler(
                         0,
                         texture.clone(),
