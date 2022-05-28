@@ -186,6 +186,48 @@ fn main() {
             TexCoord {
                 tex_coord: [0.0, 1.0],
             },
+
+            // leftright, topbottom, frontback
+            // top left (looking from front) so top right of back face
+            TexCoord {
+                tex_coord: [0.0, 0.0],
+            },
+            TexCoord {
+                tex_coord: [1.0, 1.0],
+            },
+            TexCoord {
+                tex_coord: [1.0, 0.0],
+            },
+            // top right (looking from front) so top left of back face
+            TexCoord {
+                tex_coord: [1.0, 0.0],
+            },
+            TexCoord {
+                tex_coord: [0.0, 1.0],
+            },
+            TexCoord {
+                tex_coord: [0.0, 0.0],
+            },
+            // bottom right (looking from front) so bottom left of back face
+            TexCoord {
+                tex_coord: [1.0, 1.0],
+            },
+            TexCoord {
+                tex_coord: [0.0, 0.0],
+            },
+            TexCoord {
+                tex_coord: [0.0, 1.0],
+            },
+            // bottom left (looking from front) so bottom right of back face
+            TexCoord {
+                tex_coord: [0.0, 1.0],
+            },
+            TexCoord {
+                tex_coord: [1.0, 0.0],
+            },
+            TexCoord {
+                tex_coord: [1.0, 1.0],
+            },
         ];
 
     let INDICES: Vec<u16> = vec![
