@@ -74,7 +74,6 @@ pub struct Normal {
 
 impl_vertex!(Normal, normal);
 
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
 pub struct TexCoord {
@@ -144,6 +143,10 @@ fn main() {
         N_LEFT, N_TOP, N_BACK, N_RIGHT, N_TOP, N_BACK, N_RIGHT, N_BOTTOM, N_BACK, N_LEFT, N_BOTTOM,
         N_BACK,
     ];
+
+    let TEXTURE_COORDINATES: Vec<TexCoord> = vec![TexCoord {
+        tex_coord: [0.0, 0.0],
+    }];
 
     let INDICES: Vec<u16> = vec![
         0 * 3 + 2,
@@ -274,6 +277,14 @@ fn main() {
             .unwrap();
     let normals_buffer =
         CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, NORMALS).unwrap();
+    let texture_coordinate_buffer = CpuAccessibleBuffer::from_iter(
+        device.clone(),
+        BufferUsage::all(),
+        false,
+        TEXTURE_COORDINATES,
+    )
+    .unwrap();
+
     let index_buffer =
         CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, INDICES).unwrap();
 
@@ -424,9 +435,7 @@ fn main() {
                 let layout = pipeline.layout().set_layouts().get(0).unwrap();
                 let set = PersistentDescriptorSet::new(
                     layout.clone(),
-                    [
-                        WriteDescriptorSet::buffer(0, uniform_buffer_subbuffer),
-                    ],
+                    [WriteDescriptorSet::buffer(0, uniform_buffer_subbuffer)],
                 )
                 .unwrap();
 
@@ -480,7 +489,14 @@ fn main() {
                         1,
                         set2.clone(),
                     )
-                    .bind_vertex_buffers(0, (vertex_buffer.clone(), normals_buffer.clone()))
+                    .bind_vertex_buffers(
+                        0,
+                        (
+                            vertex_buffer.clone(),
+                            normals_buffer.clone(),
+                            texture_coordinate_buffer.clone(),
+                        ),
+                    )
                     .bind_index_buffer(index_buffer.clone())
                     .draw_indexed(index_buffer.len() as u32, 1, 0, 0, 0)
                     .unwrap()
