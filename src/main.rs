@@ -12,7 +12,7 @@ use std::{io::Cursor, sync::Arc};
 use vulkano::{
     buffer::{BufferUsage, CpuAccessibleBuffer, TypedBufferAccess},
     command_buffer::{
-        AutoCommandBufferBuilder, CommandBufferUsage, RenderPassBeginInfo, SubpassContents,
+        AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents,
     },
     descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet},
     device::{
@@ -186,9 +186,8 @@ fn main() {
 
     let (texture, tex_future) = {
         let image_array_data: Vec<_> = vec![
-            include_bytes!("square.png").to_vec(),
-            include_bytes!("star.png").to_vec(),
-            include_bytes!("asterisk.png").to_vec(),
+            include_bytes!("grass_block_side.png").to_vec(),
+            include_bytes!("grass_block_side.png").to_vec(),
         ]
         .into_iter()
         .flat_map(|png_bytes| {
@@ -203,9 +202,9 @@ fn main() {
         })
         .collect();
         let dimensions = ImageDimensions::Dim2d {
-            width: 128,
-            height: 128,
-            array_layers: 3,
+            width: 16,
+            height: 16,
+            array_layers: 2,
         }; // TODO replace with your actual image array dimensions
         let (image, future) = ImmutableImage::from_iter(
             image_array_data,
@@ -312,11 +311,9 @@ fn main() {
             .unwrap();
             builder
                 .begin_render_pass(
-                    RenderPassBeginInfo {
-                        clear_values: vec![Some([0.0, 0.0, 1.0, 1.0].into())],
-                        ..RenderPassBeginInfo::framebuffer(framebuffers[image_num].clone())
-                    },
+                    framebuffers[image_num].clone(),
                     SubpassContents::Inline,
+                    vec![[0.0, 0.0, 1.0, 1.0].into()]
                 )
                 .unwrap()
                 .set_viewport(0, [viewport.clone()])
