@@ -144,19 +144,11 @@ fn main() {
         N_BACK,
     ];
 
-    let TEXTURE_COORDINATES: Vec<TexCoord> = repeat_element(
-        [
-            TexCoord {
-                tex_coord: [0.0, 0.0],
-            },
+    // TODO FIXME this is wrong because every vertex occurs three times
+    let TEXTURE_COORDINATES: Vec<TexCoord> = vec![
+            // top left of face
             TexCoord {
                 tex_coord: [1.0, 0.0],
-            },
-            TexCoord {
-                tex_coord: [1.0, 1.0],
-            },
-            TexCoord {
-                tex_coord: [1.0, 1.0],
             },
             TexCoord {
                 tex_coord: [0.0, 1.0],
@@ -164,11 +156,27 @@ fn main() {
             TexCoord {
                 tex_coord: [0.0, 0.0],
             },
-        ]
-        .into_iter(),
-        6,
-    )
-    .collect();
+            // top right of face
+            TexCoord {
+                tex_coord: [0.0, 0.0],
+            },
+            TexCoord {
+                tex_coord: [1.0, 1.0],
+            },
+            TexCoord {
+                tex_coord: [1.0, 0.0],
+            },
+            // bottom right of face
+            TexCoord {
+                tex_coord: [0.0, 1.0],
+            },
+            TexCoord {
+                tex_coord: [1.0, 0.0],
+            },
+            TexCoord {
+                tex_coord: [1.0, 1.0],
+            },
+        ];
 
     let INDICES: Vec<u16> = vec![
         0 * 3 + 2,
