@@ -71,17 +71,9 @@ pub struct Normal {
 
 impl_vertex!(Normal, normal);
 
-
-pub const INDICES: [u16; 6 * 6] = [
-    0, 1, 2, 2, 3, 0, // front
-    4, 5, 6, 6, 7, 4, // back
-    0, 3, 7, 0, 4, 7, // left
-    1, 2, 5, 2, 5, 6, // right
-    0, 1, 4, 1, 4, 5, // top
-    2, 6, 7, 2, 3, 7, // bottom
-];
-
 fn main() {
+    // TODO to render a cube we only need the three visible faces
+
     // every vertex is duplicated three times for the three normal directions
     let VERTICES: Vec<Vertex> = repeat_element(
         [
@@ -134,8 +126,25 @@ fn main() {
         normal: [0.0, 0.0, SIZE],
     };
 
-    const NORMALS: [Normal; 4] = [
-        N_TOP
+    let NORMALS: Vec<Normal> = vec![
+        N_LEFT, N_TOP, N_FRONT,
+        N_RIGHT, N_TOP, N_FRONT,
+        N_RIGHT, N_BOTTOM, N_FRONT,
+        N_LEFT, N_BOTTOM, N_FRONT,
+        // repeat with N_BACK
+        N_LEFT, N_TOP, N_BACK,
+        N_RIGHT, N_TOP, N_BACK,
+        N_RIGHT, N_BOTTOM, N_BACK,
+        N_LEFT, N_BOTTOM, N_BACK,
+    ];
+
+    let INDICES: Vec<u16> = vec![
+        0*3, 1*3, 2*3, 2*3, 3*3, 0*3, // front
+        4*3, 5*3, 6*3, 6*3, 7*3, 4*3, // back
+        0*3, 3*3, 7*3, 0*3, 4*3, 7*3, // left
+        1*3, 2*3, 5*3, 2*3, 5*3, 6*3, // right
+        0*3, 1*3, 4*3, 1*3, 4*3, 5*3, // top
+        2*3, 6*3, 7*3, 2*3, 3*3, 7*3, // bottom
     ];
 
     // The start of this example is exactly the same as `triangle`. You should read the
