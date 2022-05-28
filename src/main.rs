@@ -146,7 +146,7 @@ fn main() {
 
     // TODO FIXME this is wrong because every vertex occurs three times
     let TEXTURE_COORDINATES: Vec<TexCoord> = vec![
-            // top left of face
+            // top left of front face
             TexCoord {
                 tex_coord: [1.0, 0.0],
             },
@@ -156,7 +156,7 @@ fn main() {
             TexCoord {
                 tex_coord: [0.0, 0.0],
             },
-            // top right of face
+            // top right of front face
             TexCoord {
                 tex_coord: [0.0, 0.0],
             },
@@ -166,7 +166,7 @@ fn main() {
             TexCoord {
                 tex_coord: [1.0, 0.0],
             },
-            // bottom right of face
+            // bottom right of front face
             TexCoord {
                 tex_coord: [0.0, 1.0],
             },
@@ -175,6 +175,16 @@ fn main() {
             },
             TexCoord {
                 tex_coord: [1.0, 1.0],
+            },
+            // bottom left of front face
+            TexCoord {
+                tex_coord: [1.0, 1.0],
+            },
+            TexCoord {
+                tex_coord: [0.0, 0.0],
+            },
+            TexCoord {
+                tex_coord: [0.0, 1.0],
             },
         ];
 
