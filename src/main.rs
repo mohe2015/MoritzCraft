@@ -426,8 +426,17 @@ fn main() {
                     layout.clone(),
                     [
                         WriteDescriptorSet::buffer(0, uniform_buffer_subbuffer),
-                        WriteDescriptorSet::image_view_sampler(1, texture.clone(), sampler.clone()),
                     ],
+                )
+                .unwrap();
+
+                let set2 = PersistentDescriptorSet::new(
+                    layout.clone(),
+                    [WriteDescriptorSet::image_view_sampler(
+                        0,
+                        texture.clone(),
+                        sampler.clone(),
+                    )],
                 )
                 .unwrap();
 
@@ -464,6 +473,12 @@ fn main() {
                         pipeline.layout().clone(),
                         0,
                         set.clone(),
+                    )
+                    .bind_descriptor_sets(
+                        PipelineBindPoint::Graphics,
+                        pipeline.layout().clone(),
+                        1,
+                        set2.clone(),
                     )
                     .bind_vertex_buffers(0, (vertex_buffer.clone(), normals_buffer.clone()))
                     .bind_index_buffer(index_buffer.clone())
