@@ -381,7 +381,7 @@ fn main() {
     let instances = {
         let mut data = Vec::new();
         for x in 0..1000 {
-            for y in 0..1 {
+            for y in 0..10 {
                 for z in 0..1000 {
                     data.push(InstanceData {
                         position_offset: [x as f32 * 20.0, y as f32 * 20.0, z as f32 * 20.0],
