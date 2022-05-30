@@ -243,36 +243,36 @@ fn main() {
         2 * 3 + 2,
         3 * 3 + 2,
         2, // front
-        4 * 3 + 2,
+       /* 4 * 3 + 2,
         5 * 3 + 2,
         6 * 3 + 2,
         6 * 3 + 2,
         7 * 3 + 2,
-        4 * 3 + 2, // back
+        4 * 3 + 2, // back*/
         0,
         3 * 3,
         7 * 3,
         0,
         4 * 3,
         7 * 3, // left
-        3,
+       /* 3,
         2 * 3,
         5 * 3,
         2 * 3,
         5 * 3,
-        6 * 3, // right
+        6 * 3, // right*/
         1,
         3 + 1,
         4 * 3 + 1,
         3 + 1,
         4 * 3 + 1,
         5 * 3 + 1, // top
-        2 * 3 + 1,
+        /*2 * 3 + 1,
         6 * 3 + 1,
         7 * 3 + 1,
         2 * 3 + 1,
         3 * 3 + 1,
-        7 * 3 + 1, // bottom
+        7 * 3 + 1, // bottom*/
     ];
 
     // The start of this example is exactly the same as `triangle`. You should read the
@@ -380,9 +380,9 @@ fn main() {
     // For this example, we'll have the instances form a 10x10 grid that slowly gets larger.
     let instances = {
         let mut data = Vec::new();
-        for x in 0..1000 {
-            for y in 0..10 {
-                for z in 0..1000 {
+        for x in 0..1 {
+            for y in 0..1 {
+                for z in 0..1 {
                     data.push(InstanceData {
                         position_offset: [x as f32 * 20.0, y as f32 * 20.0, z as f32 * 20.0],
                     });
