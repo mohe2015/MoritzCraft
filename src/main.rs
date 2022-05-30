@@ -56,6 +56,13 @@ pub struct Vertex {
 
 impl_vertex!(Vertex, position);
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
+struct InstanceData {
+    position_offset: [f32; 3],
+}
+impl_vertex!(InstanceData, position_offset);
+
 const SIZE: f32 = 10.0;
 
 // x to the right
@@ -369,6 +376,25 @@ fn main() {
     let index_buffer =
         CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, indices).unwrap();
 
+    // Now we create another buffer that will store the unique data per instance.
+    // For this example, we'll have the instances form a 10x10 grid that slowly gets larger.
+    let instances = {
+        let mut data = Vec::new();
+        for x in 0..1000 {
+            for y in 0..1 {
+                for z in 0..1000 {
+                    data.push(InstanceData {
+                        position_offset: [x as f32 * 20.0, y as f32 * 20.0, z as f32 * 20.0],
+                    });
+                }
+            }
+        }
+        data
+    };
+    let instance_buffer =
+        CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, instances)
+            .unwrap();
+
     let uniform_buffer = CpuBufferPool::<vs::ty::Data>::new(device.clone(), BufferUsage::all());
 
     let vs = vs::load(device.clone()).unwrap();
@@ -579,10 +605,17 @@ fn main() {
                             vertex_buffer.clone(),
                             normals_buffer.clone(),
                             texture_coordinate_buffer.clone(),
+                            instance_buffer.clone(),
                         ),
                     )
                     .bind_index_buffer(index_buffer.clone())
-                    .draw_indexed(index_buffer.len() as u32, 1, 0, 0, 0)
+                    .draw_indexed(
+                        index_buffer.len() as u32,
+                        instance_buffer.len() as u32,
+                        0,
+                        0,
+                        0,
+                    )
                     .unwrap()
                     .end_render_pass()
                     .unwrap();
@@ -655,7 +688,8 @@ fn window_size_dependent_setup(
             BuffersDefinition::new()
                 .vertex::<Vertex>()
                 .vertex::<Normal>()
-                .vertex::<TexCoord>(),
+                .vertex::<TexCoord>()
+                .instance::<InstanceData>(),
         )
         .vertex_shader(vs.entry_point("main").unwrap(), ())
         .input_assembly_state(InputAssemblyState::new())
