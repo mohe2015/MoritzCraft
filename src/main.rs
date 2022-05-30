@@ -86,7 +86,7 @@ fn main() {
     // TODO to render a cube we only need the three visible faces
 
     // every vertex is duplicated three times for the three normal directions
-    let VERTICES: Vec<Vertex> = repeat_element(
+    let vertices: Vec<Vertex> = repeat_element(
         [
             Vertex {
                 position: [-SIZE, -SIZE, -SIZE],
@@ -137,7 +137,7 @@ fn main() {
         normal: [0.0, 0.0, SIZE],
     };
 
-    let NORMALS: Vec<Normal> = vec![
+    let normals: Vec<Normal> = vec![
         N_LEFT, N_TOP, N_FRONT, N_RIGHT, N_TOP, N_FRONT, N_RIGHT, N_BOTTOM, N_FRONT, N_LEFT,
         N_BOTTOM, N_FRONT, // repeat with N_BACK
         N_LEFT, N_TOP, N_BACK, N_RIGHT, N_TOP, N_BACK, N_RIGHT, N_BOTTOM, N_BACK, N_LEFT, N_BOTTOM,
@@ -145,7 +145,7 @@ fn main() {
     ];
 
     // TODO FIXME this is wrong because every vertex occurs three times
-    let TEXTURE_COORDINATES: Vec<TexCoord> = vec![
+    let texture_coordinates: Vec<TexCoord> = vec![
         // top left of front face
         TexCoord {
             tex_coord: [1.0, 0.0],
@@ -229,7 +229,7 @@ fn main() {
         },
     ];
 
-    let INDICES: Vec<u16> = vec![
+    let indices: Vec<u16> = vec![
         0 * 3 + 2,
         1 * 3 + 2,
         2 * 3 + 2,
@@ -354,20 +354,20 @@ fn main() {
     };
 
     let vertex_buffer =
-        CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, VERTICES)
+        CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, vertices)
             .unwrap();
     let normals_buffer =
-        CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, NORMALS).unwrap();
+        CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, normals).unwrap();
     let texture_coordinate_buffer = CpuAccessibleBuffer::from_iter(
         device.clone(),
         BufferUsage::all(),
         false,
-        TEXTURE_COORDINATES,
+        texture_coordinates,
     )
     .unwrap();
 
     let index_buffer =
-        CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, INDICES).unwrap();
+        CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, indices).unwrap();
 
     let uniform_buffer = CpuBufferPool::<vs::ty::Data>::new(device.clone(), BufferUsage::all());
 
