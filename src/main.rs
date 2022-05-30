@@ -9,6 +9,7 @@
 
 use bytemuck::{Pod, Zeroable};
 use cgmath::{Matrix3, Matrix4, Point3, Rad, Vector3};
+use winit::event::{VirtualKeyCode, ElementState};
 use std::io::Cursor;
 use std::{sync::Arc, time::Instant};
 use vulkano::image::{ImageDimensions, ImmutableImage, MipmapsCount};
@@ -88,6 +89,14 @@ pub struct TexCoord {
 }
 
 impl_vertex!(TexCoord, tex_coord);
+
+
+fn state_is_pressed(state: ElementState) -> bool {
+    match state {
+        ElementState::Pressed => true,
+        ElementState::Released => false,
+    }
+}
 
 fn main() {
     // TODO to render a cube we only need the three visible faces
@@ -485,7 +494,23 @@ fn main() {
             Event::WindowEvent {
                 event: WindowEvent::KeyboardInput { input, .. },
                 ..
-            } => {}
+            } => {
+                if let Some(key_code) = input.virtual_keycode {
+                    match key_code {
+                        VirtualKeyCode::Escape => self.should_quit = state_is_pressed(input.state),
+                        VirtualKeyCode::W => self.pan_up = state_is_pressed(input.state),
+                        VirtualKeyCode::A => self.pan_left = state_is_pressed(input.state),
+                        VirtualKeyCode::S => self.pan_down = state_is_pressed(input.state),
+                        VirtualKeyCode::D => self.pan_right = state_is_pressed(input.state),
+                        VirtualKeyCode::F => self.toggle_full_screen = state_is_pressed(input.state),
+                        VirtualKeyCode::Return => self.randomize_palette = state_is_pressed(input.state),
+                        VirtualKeyCode::Equals => self.increase_iterations = state_is_pressed(input.state),
+                        VirtualKeyCode::Minus => self.decrease_iterations = state_is_pressed(input.state),
+                        VirtualKeyCode::Space => self.toggle_julia = state_is_pressed(input.state),
+                        _ => (),
+                    }
+                }
+            }
             Event::WindowEvent {
                 event: WindowEvent::MouseInput { state, button, .. },
                 ..
