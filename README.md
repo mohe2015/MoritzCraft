@@ -3,6 +3,29 @@ https://github.com/vulkano-rs/vulkano/blob/v0.29.0/examples/src/bin/image/main.r
 https://github.com/vulkano-rs/vulkano/blob/v0.29.0/examples/src/bin/instancing.rs
 https://github.com/vulkano-rs/vulkano/tree/v0.29.0/examples/src/bin/teapot
 
+https://github.com/vulkano-rs/vulkano/blob/v0.29.0/examples/src/bin/immutable-sampler/main.rs
+
+// if you measure performance, compile release mode
+
+for interactiveness: https://github.com/vulkano-rs/vulkano/blob/v0.29.0/examples/src/bin/interactive_fractal/app.rs
+
+important: https://github.com/vulkano-rs/vulkano/blob/v0.29.0/examples/src/bin/debug.rs
+
+important: moving around in the world
+
+for worldgen: https://github.com/vulkano-rs/vulkano/blob/v0.29.0/examples/src/bin/basic-compute-shader.rs
+
+for the transformation matrix: https://github.com/vulkano-rs/vulkano/blob/v0.29.0/examples/src/bin/push-constants.rs
+
+rendering multiple tings: https://vkguide.dev/docs/chapter-3/scene_management/
+
+https://vkguide.dev/docs/gpudriven/mesh_rendering/
+https://vkguide.dev/docs/gpudriven/compute_culling/
+https://vkguide.dev/docs/extra-chapter/asset_system/
+https://vkguide.dev/docs/extra-chapter/multithreading/
+
+
+
 // the cube is a bad start
 // https://www.reddit.com/r/opengl/comments/4oozww/indexed_buffers_and_face_normals/
 
