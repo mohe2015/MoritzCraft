@@ -6,7 +6,7 @@
 // at your option. All files in the project carrying such
 // notice may not be copied, modified, or distributed except
 // according to those terms.
-use std::{sync::Arc};
+
 
 use crate::main_pipeline::MainPipeline;
 
@@ -18,7 +18,7 @@ use vulkano::image::{ImageUsage};
 use vulkano::instance::{Instance, InstanceCreateInfo};
 
 use vulkano::{
-    device::{Device, Queue},
+    device::{Device},
     swapchain::{
         Swapchain, SwapchainCreateInfo,
     },
@@ -122,10 +122,10 @@ impl PoritzCraftRenderer {
 
         Self {
             main_pipeline: MainPipeline::new(
-                device.clone(),
+                device,
                 swapchain,
                 surface,
-                queue.clone(),
+                queue,
                 images,
             ),
         }
