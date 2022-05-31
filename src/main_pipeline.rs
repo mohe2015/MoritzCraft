@@ -14,11 +14,11 @@ use vulkano::{
     pipeline::{
         graphics::{
             depth_stencil::DepthStencilState,
-            input_assembly::InputAssemblyState,
+            input_assembly::{InputAssemblyState, PrimitiveTopology},
             vertex_input::BuffersDefinition,
             viewport::{Viewport, ViewportState},
         },
-        GraphicsPipeline, Pipeline, PipelineBindPoint,
+        GraphicsPipeline, Pipeline, PipelineBindPoint, StateMode,
     },
     render_pass::{Framebuffer, FramebufferCreateInfo, RenderPass, Subpass},
     sampler::{Filter, Sampler, SamplerAddressMode, SamplerCreateInfo},
@@ -268,6 +268,9 @@ impl MainPipeline {
             CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), false, indices)
                 .unwrap();
 
+
+        // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+        
         // Now we create another buffer that will store the unique data per instance.
         // For this example, we'll have the instances form a 10x10 grid that slowly gets larger.
         let instances = {
@@ -588,7 +591,11 @@ fn window_size_dependent_setup(
                 .instance::<InstanceData>(),
         )
         .vertex_shader(vs.entry_point("main").unwrap(), ())
-        .input_assembly_state(InputAssemblyState::new())
+        .input_assembly_state(InputAssemblyState {
+            // primitive_restart_enable: StateMode::Fixed(true),
+            // topology: PrimitiveTopology::TriangleStrip
+            ..Default::default()
+        })
         .viewport_state(ViewportState::viewport_fixed_scissor_irrelevant([
             Viewport {
                 origin: [0.0, 0.0],
