@@ -1,11 +1,18 @@
 use std::{io::Cursor, sync::Arc};
 
-use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, device::{Device, Queue}, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, pipeline::{GraphicsPipeline, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}}, swapchain::Swapchain, command_buffer::{CommandBufferExecFuture, PrimaryAutoCommandBuffer, pool::standard::StandardCommandPoolAlloc}, sync::NowFuture};
+use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, device::{Device, Queue}, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, pipeline::{GraphicsPipeline, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}, PipelineBindPoint, Pipeline}, swapchain::Swapchain, command_buffer::{CommandBufferExecFuture, PrimaryAutoCommandBuffer, pool::standard::StandardCommandPoolAlloc, AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents}, sync::NowFuture, descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet}, memory::pool::{PotentialDedicatedAllocation, StdMemoryPoolAlloc}};
 use winit::window::Window;
 use vulkano::image::ImageAccess;
 use crate::utils::{Vertex, repeat_element, SIZE, Normal, TexCoord, InstanceData};
+use vulkano::buffer::TypedBufferAccess;
 
 pub struct PoritzCraftRenderer {
+    vertex_buffer: Arc<CpuAccessibleBuffer<[Vertex]>>,
+    normals_buffer: Arc<CpuAccessibleBuffer<[Normal]>>,
+    texture_coordinate_buffer: Arc<CpuAccessibleBuffer<[TexCoord]>>,
+    index_buffer: Arc<CpuAccessibleBuffer<[u16]>>,
+    instance_buffer: Arc<CpuAccessibleBuffer<[InstanceData]>>,
+    pipeline: Arc<GraphicsPipeline>,
 
 }
 
@@ -305,8 +312,96 @@ impl PoritzCraftRenderer {
         let (mut pipeline, mut framebuffers) =
             window_size_dependent_setup(device.clone(), &vs, &fs, &images, render_pass.clone());
 
-        (tex_future, Self {})
+        (tex_future, Self {
+            index_buffer,
+            normals_buffer,
+            texture_coordinate_buffer,
+            vertex_buffer,
+            instance_buffer,
+            pipeline,
+
+        })
     }
+
+    pub fn render(&self) {
+        let layout = self.pipeline.layout().set_layouts().get(0).unwrap();
+        let set = PersistentDescriptorSet::new(
+            layout.clone(),
+            [WriteDescriptorSet::buffer(0, uniform_buffer_subbuffer)],
+        )
+        .unwrap();
+
+        let layout2 = self.pipeline.layout().set_layouts().get(1).unwrap();
+        let set2 = PersistentDescriptorSet::new(
+            layout2.clone(),
+            [WriteDescriptorSet::image_view_sampler(
+                0,
+                texture.clone(),
+                sampler.clone(),
+            )],
+        )
+        .unwrap();
+
+        let mut builder = AutoCommandBufferBuilder::primary(
+            device.clone(),
+            queue.family(),
+            CommandBufferUsage::OneTimeSubmit,
+        )
+        .unwrap();
+        builder
+            .begin_render_pass(
+                framebuffers[image_num].clone(),
+                SubpassContents::Inline,
+                vec![[0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
+            )
+            .unwrap()
+            .bind_pipeline_graphics(self.pipeline.clone())
+            .bind_descriptor_sets(
+                PipelineBindPoint::Graphics,
+                self.pipeline.layout().clone(),
+                0,
+                set,
+            )
+            .bind_descriptor_sets(
+                PipelineBindPoint::Graphics,
+                self.pipeline.layout().clone(),
+                1,
+                set2,
+            )
+            .bind_vertex_buffers(
+                0,
+                (
+                    self.vertex_buffer.clone(),
+                    self.normals_buffer.clone(),
+                    self.texture_coordinate_buffer.clone(),
+                    self.instance_buffer.clone(),
+                ),
+            )
+            .bind_index_buffer(self.index_buffer.clone())
+            .draw_indexed(
+                self.index_buffer.len() as u32,
+                self.instance_buffer.len() as u32,
+                0,
+                0,
+                0,
+            )
+            .unwrap()
+            .end_render_pass()
+            .unwrap();
+        let command_buffer = builder.build().unwrap();
+
+        let future = previous_frame_end
+            .take()
+            .unwrap()
+            .join(acquire_future)
+            .then_execute(queue.clone(), command_buffer)
+            .unwrap()
+            .then_swapchain_present(queue.clone(), swapchain.clone(), image_num)
+            .then_signal_fence_and_flush();
+
+        future
+    }
+
 }
 
 /// This method is called once during initialization, then again whenever the window is resized
