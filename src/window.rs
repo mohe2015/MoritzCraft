@@ -125,7 +125,7 @@ impl PoritzCraftWindow {
             .unwrap()
         };
 
-        let renderer = PoritzCraftRenderer::new(device, swapchain, queue, &images, surface);
+        let mut renderer = PoritzCraftRenderer::new(device, swapchain, queue, &images, surface);
 
         event_loop.run(move |event, _, control_flow| {
             match event {
@@ -139,7 +139,7 @@ impl PoritzCraftWindow {
                     event: WindowEvent::Resized(_),
                     ..
                 } => {
-                    recreate_swapchain = true;
+                    renderer.recreate_swapchain = true;
                 }
                 Event::WindowEvent {
                     event: WindowEvent::KeyboardInput { input, .. },

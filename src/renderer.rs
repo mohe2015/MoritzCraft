@@ -4,6 +4,7 @@ use crate::utils::{repeat_element, InstanceData, Normal, TexCoord, Vertex, SIZE}
 use cgmath::{Matrix4, Point3, Rad, Vector3};
 use vulkano::buffer::TypedBufferAccess;
 use vulkano::image::ImageAccess;
+use vulkano::swapchain::Surface;
 use vulkano::{
     buffer::{BufferUsage, CpuAccessibleBuffer, CpuBufferPool},
     command_buffer::{
@@ -53,7 +54,7 @@ pub struct PoritzCraftRenderer {
     texture: Arc<ImageView<ImmutableImage>>,
     framebuffers: Vec<Arc<Framebuffer>>,
     previous_frame_end: Option<Box<dyn GpuFuture>>,
-    recreate_swapchain: bool,
+    pub recreate_swapchain: bool,
     vs: Arc<ShaderModule>,
     fs: Arc<ShaderModule>,
     render_pass: Arc<RenderPass>,
@@ -388,7 +389,7 @@ impl PoritzCraftRenderer {
         }
     }
 
-    pub fn render(&self) {
+    pub fn render(&mut self) {
         self.previous_frame_end.as_mut().unwrap().cleanup_finished();
 
         if self.recreate_swapchain {

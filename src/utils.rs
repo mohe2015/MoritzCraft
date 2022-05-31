@@ -5,7 +5,7 @@ use winit::event::ElementState;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
 pub struct Vertex {
-    position: [f32; 3],
+    pub position: [f32; 3],
 }
 
 impl_vertex!(Vertex, position);
@@ -13,7 +13,7 @@ impl_vertex!(Vertex, position);
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
 pub struct InstanceData {
-    position_offset: [f32; 3],
+    pub position_offset: [f32; 3],
 }
 impl_vertex!(InstanceData, position_offset);
 
@@ -33,7 +33,7 @@ pub fn repeat_element<T: Clone>(
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
 pub struct Normal {
-    normal: [f32; 3],
+    pub normal: [f32; 3],
 }
 
 impl_vertex!(Normal, normal);
@@ -41,7 +41,7 @@ impl_vertex!(Normal, normal);
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
 pub struct TexCoord {
-    tex_coord: [f32; 2],
+    pub tex_coord: [f32; 2],
 }
 
 impl_vertex!(TexCoord, tex_coord);
