@@ -80,7 +80,7 @@ impl PoritzCraftRenderer {
         .unwrap();
 
         let surface = WindowBuilder::new()
-            .build_vk_surface(&event_loop, instance.clone())
+            .build_vk_surface(event_loop, instance.clone())
             .unwrap();
 
         let device_extensions = DeviceExtensions {

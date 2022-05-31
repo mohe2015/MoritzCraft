@@ -9,20 +9,9 @@
 
 use crate::renderer::PoritzCraftRenderer;
 
-use vulkano::{
-    device::{
-        physical::{PhysicalDevice, PhysicalDeviceType},
-        Device, DeviceCreateInfo, DeviceExtensions, QueueCreateInfo,
-    },
-    image::ImageUsage,
-    instance::{Instance, InstanceCreateInfo},
-    swapchain::{Swapchain, SwapchainCreateInfo},
-};
-use vulkano_win::VkSurfaceBuild;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
-    window::WindowBuilder,
 };
 
 pub struct PoritzCraftWindow {}
