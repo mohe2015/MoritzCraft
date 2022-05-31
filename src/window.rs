@@ -1,6 +1,8 @@
 use std::time::Instant;
 
+use crate::renderer::PoritzCraftRenderer;
 use cgmath::{Matrix3, Matrix4, Point3, Rad, Vector3};
+use vulkano::sync::GpuFuture;
 use vulkano::{
     command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents},
     descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet},
@@ -21,8 +23,6 @@ use winit::{
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
-use vulkano::sync::GpuFuture;
-use crate::renderer::PoritzCraftRenderer;
 
 // Copyright (c) 2021 The vulkano developers
 // Licensed under the Apache License, Version 2.0
@@ -125,8 +125,7 @@ impl PoritzCraftWindow {
             .unwrap()
         };
 
-
-        let renderer = PoritzCraftRenderer::new(device, swapchain, queue, images);
+        let renderer = PoritzCraftRenderer::new(device, swapchain, queue, &images);
 
         event_loop.run(move |event, _, control_flow| {
             match event {
@@ -177,7 +176,7 @@ impl PoritzCraftWindow {
                     ..
                 } => {}
                 Event::RedrawEventsCleared => {
-                   renderer.render();
+                    renderer.render();
                 }
                 _ => (),
             }

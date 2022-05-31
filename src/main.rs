@@ -6,8 +6,8 @@
 // at your option. All files in the project carrying such
 // notice may not be copied, modified, or distributed except
 // according to those terms.
-pub mod utils;
 pub mod renderer;
+pub mod utils;
 pub mod window;
 
 use bytemuck::{Pod, Zeroable};

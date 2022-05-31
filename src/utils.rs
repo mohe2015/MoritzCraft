@@ -1,7 +1,6 @@
-use bytemuck::{Zeroable, Pod};
+use bytemuck::{Pod, Zeroable};
 use vulkano::impl_vertex;
 use winit::event::ElementState;
-
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
@@ -24,7 +23,10 @@ pub const SIZE: f32 = 10.0;
 // y down
 // z inwards
 
-pub fn repeat_element<T: Clone>(it: impl Iterator<Item = T>, cnt: usize) -> impl Iterator<Item = T> {
+pub fn repeat_element<T: Clone>(
+    it: impl Iterator<Item = T>,
+    cnt: usize,
+) -> impl Iterator<Item = T> {
     it.flat_map(move |n| std::iter::repeat(n).take(cnt))
 }
 
