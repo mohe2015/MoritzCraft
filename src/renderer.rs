@@ -1,3 +1,10 @@
+use std::{io::Cursor, sync::Arc};
+
+use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, device::Device, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, pipeline::{GraphicsPipeline, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}}};
+use winit::window::Window;
+
+use crate::utils::{Vertex, repeat_element, SIZE, Normal, TexCoord, InstanceData};
+
 pub struct PoritzCraftRenderer {}
 
 impl PoritzCraftRenderer {
@@ -295,8 +302,6 @@ impl PoritzCraftRenderer {
 
         let (mut pipeline, mut framebuffers) =
             window_size_dependent_setup(device.clone(), &vs, &fs, &images, render_pass.clone());
-
-        PoritzCraftWindow::new().run();
 
         Self {}
     }
