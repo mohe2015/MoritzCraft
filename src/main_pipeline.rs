@@ -2,7 +2,7 @@ use std::{io::Cursor, sync::Arc, time::Instant};
 
 use cgmath::{Matrix4, Point3, Rad, Vector3};
 use vulkano::{
-    buffer::{BufferUsage, CpuAccessibleBuffer, CpuBufferPool, TypedBufferAccess, ImmutableBuffer},
+    buffer::{BufferUsage, CpuBufferPool, TypedBufferAccess, ImmutableBuffer},
     command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents},
     descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet},
     device::{Device, Queue},
@@ -14,11 +14,11 @@ use vulkano::{
     pipeline::{
         graphics::{
             depth_stencil::DepthStencilState,
-            input_assembly::{InputAssemblyState, PrimitiveTopology},
+            input_assembly::{InputAssemblyState},
             vertex_input::BuffersDefinition,
             viewport::{Viewport, ViewportState},
         },
-        GraphicsPipeline, Pipeline, PipelineBindPoint, StateMode,
+        GraphicsPipeline, Pipeline, PipelineBindPoint,
     },
     render_pass::{Framebuffer, FramebufferCreateInfo, RenderPass, Subpass},
     sampler::{Filter, Sampler, SamplerAddressMode, SamplerCreateInfo},

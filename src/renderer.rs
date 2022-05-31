@@ -6,47 +6,26 @@
 // at your option. All files in the project carrying such
 // notice may not be copied, modified, or distributed except
 // according to those terms.
-use std::{io::Cursor, sync::Arc, time::Instant};
+use std::{sync::Arc};
 
 use crate::main_pipeline::MainPipeline;
-use crate::utils::{repeat_element, InstanceData, Normal, TexCoord, Vertex, SIZE};
-use cgmath::{Matrix4, Point3, Rad, Vector3};
-use vulkano::buffer::TypedBufferAccess;
+
+
+
 use vulkano::device::physical::{PhysicalDevice, PhysicalDeviceType};
 use vulkano::device::{DeviceCreateInfo, DeviceExtensions, QueueCreateInfo};
-use vulkano::image::{ImageAccess, ImageUsage};
+use vulkano::image::{ImageUsage};
 use vulkano::instance::{Instance, InstanceCreateInfo};
-use vulkano::swapchain::Surface;
+
 use vulkano::{
-    buffer::{BufferUsage, CpuAccessibleBuffer, CpuBufferPool},
-    command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents},
-    descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet},
     device::{Device, Queue},
-    format::Format,
-    image::{
-        view::ImageView, AttachmentImage, ImageDimensions, ImmutableImage, MipmapsCount,
-        SwapchainImage,
-    },
-    pipeline::{
-        graphics::{
-            depth_stencil::DepthStencilState,
-            input_assembly::InputAssemblyState,
-            vertex_input::BuffersDefinition,
-            viewport::{Viewport, ViewportState},
-        },
-        GraphicsPipeline, Pipeline, PipelineBindPoint,
-    },
-    render_pass::{Framebuffer, FramebufferCreateInfo, RenderPass, Subpass},
-    sampler::{Filter, Sampler, SamplerAddressMode, SamplerCreateInfo},
-    shader::ShaderModule,
     swapchain::{
-        acquire_next_image, AcquireError, Swapchain, SwapchainCreateInfo, SwapchainCreationError,
+        Swapchain, SwapchainCreateInfo,
     },
-    sync::{self, FlushError, GpuFuture},
 };
-use vulkano_win::VkSurfaceBuild;
+
 use winit::event_loop::EventLoop;
-use winit::window::{Window, WindowBuilder};
+use winit::window::{WindowBuilder};
 
 pub struct PoritzCraftRenderer {
     queue: Arc<Queue>,
