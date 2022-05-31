@@ -49,13 +49,8 @@ use winit::event_loop::EventLoop;
 use winit::window::{Window, WindowBuilder};
 
 pub struct PoritzCraftRenderer {
-    rotation_start: Instant,
-    swapchain: Arc<Swapchain<Window>>,
     queue: Arc<Queue>,
     device: Arc<Device>,
-    previous_frame_end: Option<Box<dyn GpuFuture>>,
-    pub recreate_swapchain: bool,
-    surface: Arc<Surface<Window>>,
     main_pipeline: MainPipeline,
 }
 
@@ -148,176 +143,11 @@ impl PoritzCraftRenderer {
         };
         // TODO to render a cube we only need the three visible faces
 
-        let rotation_start = Instant::now();
 
         Self {
-            rotation_start,
-            swapchain,
             queue,
             device,
-            surface,
-            main_pipeline: MainPipeline::new(device, swapchain),
-            previous_frame_end: Some(tex_future.boxed()),
-            recreate_swapchain: false,
-        }
-    }
-
-    pub fn render(&mut self) {
-        self.previous_frame_end.as_mut().unwrap().cleanup_finished();
-
-        if self.recreate_swapchain {
-            let (new_swapchain, new_images) = match self.swapchain.recreate(SwapchainCreateInfo {
-                image_extent: self.surface.window().inner_size().into(),
-                ..self.swapchain.create_info()
-            }) {
-                Ok(r) => r,
-                Err(SwapchainCreationError::ImageExtentNotSupported { .. }) => return,
-                Err(e) => panic!("Failed to recreate swapchain: {:?}", e),
-            };
-
-            self.swapchain = new_swapchain;
-            let (new_pipeline, new_framebuffers) = window_size_dependent_setup(
-                self.device.clone(),
-                &self.vs,
-                &self.fs,
-                &new_images,
-                self.render_pass.clone(),
-            );
-            self.pipeline = new_pipeline;
-            self.framebuffers = new_framebuffers;
-            self.recreate_swapchain = false;
-        }
-
-        let (image_num, suboptimal, acquire_future) =
-            match acquire_next_image(self.swapchain.clone(), None) {
-                Ok(r) => r,
-                Err(AcquireError::OutOfDate) => {
-                    self.recreate_swapchain = true;
-                    return;
-                }
-                Err(e) => panic!("Failed to acquire next image: {:?}", e),
-            };
-
-        if suboptimal {
-            self.recreate_swapchain = true;
-        }
-
-        let uniform_buffer_subbuffer = {
-            let elapsed = self.rotation_start.elapsed();
-            let rotation =
-                elapsed.as_secs() as f64 + elapsed.subsec_nanos() as f64 / 1_000_000_000.0;
-            let rotation = Matrix4::from_angle_y(Rad(rotation as f32));
-
-            // note: this teapot was meant for OpenGL where the origin is at the lower left
-            //       instead the origin is at the upper left in Vulkan, so we reverse the Y axis
-            let aspect_ratio =
-                self.swapchain.image_extent()[0] as f32 / self.swapchain.image_extent()[1] as f32;
-            let proj =
-                cgmath::perspective(Rad(std::f32::consts::FRAC_PI_2), aspect_ratio, 0.01, 100.0);
-            let view = Matrix4::look_at_rh(
-                Point3::new(0.3, 0.3, 1.0),
-                Point3::new(0.0, 0.0, 0.0),
-                Vector3::new(0.0, -1.0, 0.0),
-            );
-            let scale = Matrix4::from_scale(0.01);
-
-            let uniform_data = vs::ty::Data {
-                world: rotation.into(),
-                view: (view * scale).into(),
-                proj: proj.into(),
-            };
-
-            self.uniform_buffer.next(uniform_data).unwrap()
-        };
-
-        let layout = self.pipeline.layout().set_layouts().get(0).unwrap();
-        let set = PersistentDescriptorSet::new(
-            layout.clone(),
-            [WriteDescriptorSet::buffer(0, uniform_buffer_subbuffer)],
-        )
-        .unwrap();
-
-        let layout2 = self.pipeline.layout().set_layouts().get(1).unwrap();
-        let set2 = PersistentDescriptorSet::new(
-            layout2.clone(),
-            [WriteDescriptorSet::image_view_sampler(
-                0,
-                self.texture.clone(),
-                self.sampler.clone(),
-            )],
-        )
-        .unwrap();
-
-        let mut builder = AutoCommandBufferBuilder::primary(
-            self.device.clone(),
-            self.queue.family(),
-            CommandBufferUsage::OneTimeSubmit,
-        )
-        .unwrap();
-        builder
-            .begin_render_pass(
-                self.framebuffers[image_num].clone(),
-                SubpassContents::Inline,
-                vec![[0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
-            )
-            .unwrap()
-            .bind_pipeline_graphics(self.pipeline.clone())
-            .bind_descriptor_sets(
-                PipelineBindPoint::Graphics,
-                self.pipeline.layout().clone(),
-                0,
-                set,
-            )
-            .bind_descriptor_sets(
-                PipelineBindPoint::Graphics,
-                self.pipeline.layout().clone(),
-                1,
-                set2,
-            )
-            .bind_vertex_buffers(
-                0,
-                (
-                    self.vertex_buffer.clone(),
-                    self.normals_buffer.clone(),
-                    self.texture_coordinate_buffer.clone(),
-                    self.instance_buffer.clone(),
-                ),
-            )
-            .bind_index_buffer(self.index_buffer.clone())
-            .draw_indexed(
-                self.index_buffer.len() as u32,
-                self.instance_buffer.len() as u32,
-                0,
-                0,
-                0,
-            )
-            .unwrap()
-            .end_render_pass()
-            .unwrap();
-        let command_buffer = builder.build().unwrap();
-
-        let future = self
-            .previous_frame_end
-            .take()
-            .unwrap()
-            .join(acquire_future)
-            .then_execute(self.queue.clone(), command_buffer)
-            .unwrap()
-            .then_swapchain_present(self.queue.clone(), self.swapchain.clone(), image_num)
-            .then_signal_fence_and_flush();
-
-        match future {
-            Ok(future) => {
-                self.previous_frame_end = Some(future.boxed());
-            }
-            Err(FlushError::OutOfDate) => {
-                self.recreate_swapchain = true;
-                self.previous_frame_end = Some(sync::now(self.device.clone()).boxed());
-            }
-            Err(e) => {
-                println!("Failed to flush future: {:?}", e);
-                self.previous_frame_end = Some(sync::now(self.device.clone()).boxed());
-            }
+            main_pipeline: MainPipeline::new(device, swapchain, surface),
         }
     }
 }
