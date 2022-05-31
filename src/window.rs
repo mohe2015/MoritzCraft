@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use cgmath::{Matrix3, Rad, Matrix4, Point3, Vector3};
 use vulkano::{
     device::{
@@ -6,7 +8,7 @@ use vulkano::{
     },
     image::ImageUsage,
     instance::{Instance, InstanceCreateInfo},
-    swapchain::{Swapchain, SwapchainCreateInfo, SwapchainCreationError},
+    swapchain::{Swapchain, SwapchainCreateInfo, SwapchainCreationError, acquire_next_image, AcquireError}, descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet}, command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents}, pipeline::PipelineBindPoint,
 };
 use vulkano_win::VkSurfaceBuild;
 use winit::{event_loop::{EventLoop, ControlFlow}, window::WindowBuilder, event::{Event, WindowEvent}};
@@ -27,7 +29,7 @@ impl PoritzCraftWindow {
         Self {}
     }
 
-    pub fn run() {
+    pub fn run(&self) {
         let required_extensions = vulkano_win::required_extensions();
         let instance = Instance::new(InstanceCreateInfo {
             enabled_extensions: required_extensions,
@@ -111,6 +113,11 @@ impl PoritzCraftWindow {
             )
             .unwrap()
         };
+
+        let mut recreate_swapchain = false;
+
+    let mut previous_frame_end = Some(tex_future.boxed());
+    let rotation_start = Instant::now();
 
 
     event_loop.run(move |event, _, control_flow| {
@@ -234,81 +241,7 @@ impl PoritzCraftWindow {
                     recreate_swapchain = true;
                 }
 
-
-                let layout = pipeline.layout().set_layouts().get(0).unwrap();
-                let set = PersistentDescriptorSet::new(
-                    layout.clone(),
-                    [WriteDescriptorSet::buffer(0, uniform_buffer_subbuffer)],
-                )
-                .unwrap();
-
-                let layout2 = pipeline.layout().set_layouts().get(1).unwrap();
-                let set2 = PersistentDescriptorSet::new(
-                    layout2.clone(),
-                    [WriteDescriptorSet::image_view_sampler(
-                        0,
-                        texture.clone(),
-                        sampler.clone(),
-                    )],
-                )
-                .unwrap();
-
-                let mut builder = AutoCommandBufferBuilder::primary(
-                    device.clone(),
-                    queue.family(),
-                    CommandBufferUsage::OneTimeSubmit,
-                )
-                .unwrap();
-                builder
-                    .begin_render_pass(
-                        framebuffers[image_num].clone(),
-                        SubpassContents::Inline,
-                        vec![[0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
-                    )
-                    .unwrap()
-                    .bind_pipeline_graphics(pipeline.clone())
-                    .bind_descriptor_sets(
-                        PipelineBindPoint::Graphics,
-                        pipeline.layout().clone(),
-                        0,
-                        set,
-                    )
-                    .bind_descriptor_sets(
-                        PipelineBindPoint::Graphics,
-                        pipeline.layout().clone(),
-                        1,
-                        set2,
-                    )
-                    .bind_vertex_buffers(
-                        0,
-                        (
-                            vertex_buffer.clone(),
-                            normals_buffer.clone(),
-                            texture_coordinate_buffer.clone(),
-                            instance_buffer.clone(),
-                        ),
-                    )
-                    .bind_index_buffer(index_buffer.clone())
-                    .draw_indexed(
-                        index_buffer.len() as u32,
-                        instance_buffer.len() as u32,
-                        0,
-                        0,
-                        0,
-                    )
-                    .unwrap()
-                    .end_render_pass()
-                    .unwrap();
-                let command_buffer = builder.build().unwrap();
-
-                let future = previous_frame_end
-                    .take()
-                    .unwrap()
-                    .join(acquire_future)
-                    .then_execute(queue.clone(), command_buffer)
-                    .unwrap()
-                    .then_swapchain_present(queue.clone(), swapchain.clone(), image_num)
-                    .then_signal_fence_and_flush();
+                let future = render();
 
                 match future {
                     Ok(future) => {
@@ -328,4 +261,83 @@ impl PoritzCraftWindow {
         }
     });
     }
+}
+
+pub fn render() {
+    let layout = pipeline.layout().set_layouts().get(0).unwrap();
+    let set = PersistentDescriptorSet::new(
+        layout.clone(),
+        [WriteDescriptorSet::buffer(0, uniform_buffer_subbuffer)],
+    )
+    .unwrap();
+
+    let layout2 = pipeline.layout().set_layouts().get(1).unwrap();
+    let set2 = PersistentDescriptorSet::new(
+        layout2.clone(),
+        [WriteDescriptorSet::image_view_sampler(
+            0,
+            texture.clone(),
+            sampler.clone(),
+        )],
+    )
+    .unwrap();
+
+    let mut builder = AutoCommandBufferBuilder::primary(
+        device.clone(),
+        queue.family(),
+        CommandBufferUsage::OneTimeSubmit,
+    )
+    .unwrap();
+    builder
+        .begin_render_pass(
+            framebuffers[image_num].clone(),
+            SubpassContents::Inline,
+            vec![[0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
+        )
+        .unwrap()
+        .bind_pipeline_graphics(pipeline.clone())
+        .bind_descriptor_sets(
+            PipelineBindPoint::Graphics,
+            pipeline.layout().clone(),
+            0,
+            set,
+        )
+        .bind_descriptor_sets(
+            PipelineBindPoint::Graphics,
+            pipeline.layout().clone(),
+            1,
+            set2,
+        )
+        .bind_vertex_buffers(
+            0,
+            (
+                vertex_buffer.clone(),
+                normals_buffer.clone(),
+                texture_coordinate_buffer.clone(),
+                instance_buffer.clone(),
+            ),
+        )
+        .bind_index_buffer(index_buffer.clone())
+        .draw_indexed(
+            index_buffer.len() as u32,
+            instance_buffer.len() as u32,
+            0,
+            0,
+            0,
+        )
+        .unwrap()
+        .end_render_pass()
+        .unwrap();
+    let command_buffer = builder.build().unwrap();
+
+    let future = previous_frame_end
+        .take()
+        .unwrap()
+        .join(acquire_future)
+        .then_execute(queue.clone(), command_buffer)
+        .unwrap()
+        .then_swapchain_present(queue.clone(), swapchain.clone(), image_num)
+        .then_signal_fence_and_flush();
+
+    future
 }
