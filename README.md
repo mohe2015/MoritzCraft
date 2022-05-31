@@ -19,6 +19,9 @@ for the transformation matrix: https://github.com/vulkano-rs/vulkano/blob/v0.29.
 
 rendering multiple tings: https://vkguide.dev/docs/chapter-3/scene_management/
 
+https://developer.nvidia.com/blog/vulkan-dos-donts/
+
+
 https://vkguide.dev/docs/gpudriven/mesh_rendering/
 https://vkguide.dev/docs/gpudriven/compute_culling/
 https://vkguide.dev/docs/extra-chapter/asset_system/

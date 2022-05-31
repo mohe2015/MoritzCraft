@@ -496,6 +496,7 @@ fn main() {
                 ..
             } => {
                 if let Some(key_code) = input.virtual_keycode {
+                    /*
                     match key_code {
                         VirtualKeyCode::Escape => self.should_quit = state_is_pressed(input.state),
                         VirtualKeyCode::W => self.pan_up = state_is_pressed(input.state),
@@ -509,6 +510,7 @@ fn main() {
                         VirtualKeyCode::Space => self.toggle_julia = state_is_pressed(input.state),
                         _ => (),
                     }
+                    */
                 }
             }
             Event::WindowEvent {
