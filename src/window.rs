@@ -21,6 +21,8 @@ use winit::{
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
+use vulkano::sync::GpuFuture;
+use crate::renderer::PoritzCraftRenderer;
 
 // Copyright (c) 2021 The vulkano developers
 // Licensed under the Apache License, Version 2.0
@@ -124,6 +126,8 @@ impl PoritzCraftWindow {
         };
 
         let mut recreate_swapchain = false;
+
+        let (tex_future, renderer) = PoritzCraftRenderer::new(&device, &swapchain, &queue, &images);
 
         let mut previous_frame_end = Some(tex_future.boxed());
         let rotation_start = Instant::now();

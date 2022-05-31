@@ -1,6 +1,6 @@
 use std::{io::Cursor, sync::Arc};
 
-use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, device::{Device, Queue}, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, pipeline::{GraphicsPipeline, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}}, swapchain::Swapchain};
+use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, device::{Device, Queue}, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, pipeline::{GraphicsPipeline, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}}, swapchain::Swapchain, command_buffer::{CommandBufferExecFuture, PrimaryAutoCommandBuffer, pool::standard::StandardCommandPoolAlloc}, sync::NowFuture};
 use winit::window::Window;
 use vulkano::image::ImageAccess;
 use crate::utils::{Vertex, repeat_element, SIZE, Normal, TexCoord, InstanceData};
@@ -10,7 +10,7 @@ pub struct PoritzCraftRenderer {
 }
 
 impl PoritzCraftRenderer {
-    pub fn new(device: &Arc<Device>, swapchain: &Arc<Swapchain<Window>>, queue: &Arc<Queue>, images: &[Arc<SwapchainImage<Window>>]) -> Self {
+    pub fn new(device: &Arc<Device>, swapchain: &Arc<Swapchain<Window>>, queue: &Arc<Queue>, images: &[Arc<SwapchainImage<Window>>]) -> (CommandBufferExecFuture<NowFuture, PrimaryAutoCommandBuffer<StandardCommandPoolAlloc>>, Self) {
         // TODO to render a cube we only need the three visible faces
 
         // every vertex is duplicated three times for the three normal directions
@@ -305,7 +305,7 @@ impl PoritzCraftRenderer {
         let (mut pipeline, mut framebuffers) =
             window_size_dependent_setup(device.clone(), &vs, &fs, &images, render_pass.clone());
 
-        Self {}
+        (tex_future, Self {})
     }
 }
 
