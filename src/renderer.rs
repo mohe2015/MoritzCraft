@@ -56,6 +56,8 @@ pub struct PoritzCraftRenderer {
     recreate_swapchain: bool,
     vs: Arc<ShaderModule>,
     fs: Arc<ShaderModule>,
+    render_pass: Arc<RenderPass>,
+    surface: Arc<Surface<Window>>,
 }
 
 impl PoritzCraftRenderer {
@@ -64,6 +66,7 @@ impl PoritzCraftRenderer {
         swapchain: Arc<Swapchain<Window>>,
         queue: Arc<Queue>,
         images: &[Arc<SwapchainImage<Window>>],
+        surface: Arc<Surface<Window>>
     ) -> Self {
         // TODO to render a cube we only need the three visible faces
 
@@ -378,6 +381,8 @@ impl PoritzCraftRenderer {
             framebuffers,
             fs,
             vs,
+            surface,
+            render_pass,
             previous_frame_end: Some(tex_future.boxed()),
             recreate_swapchain: false,
         }
