@@ -51,7 +51,7 @@ use winit::window::{Window, WindowBuilder};
 pub struct PoritzCraftRenderer {
     queue: Arc<Queue>,
     device: Arc<Device>,
-    main_pipeline: MainPipeline,
+    pub main_pipeline: MainPipeline,
 }
 
 impl PoritzCraftRenderer {
@@ -147,67 +147,7 @@ impl PoritzCraftRenderer {
         Self {
             queue,
             device,
-            main_pipeline: MainPipeline::new(device, swapchain, surface),
+            main_pipeline: MainPipeline::new(device, swapchain, surface, queue, images),
         }
     }
-}
-
-/// This method is called once during initialization, then again whenever the window is resized
-fn window_size_dependent_setup(
-    device: Arc<Device>,
-    vs: &ShaderModule,
-    fs: &ShaderModule,
-    images: &[Arc<SwapchainImage<Window>>],
-    render_pass: Arc<RenderPass>,
-) -> (Arc<GraphicsPipeline>, Vec<Arc<Framebuffer>>) {
-    let dimensions = images[0].dimensions().width_height();
-
-    let depth_buffer = ImageView::new_default(
-        AttachmentImage::transient(device.clone(), dimensions, Format::D16_UNORM).unwrap(),
-    )
-    .unwrap();
-
-    let framebuffers = images
-        .iter()
-        .map(|image| {
-            let view = ImageView::new_default(image.clone()).unwrap();
-            Framebuffer::new(
-                render_pass.clone(),
-                FramebufferCreateInfo {
-                    attachments: vec![view, depth_buffer.clone()],
-                    ..Default::default()
-                },
-            )
-            .unwrap()
-        })
-        .collect::<Vec<_>>();
-
-    // In the triangle example we use a dynamic viewport, as its a simple example.
-    // However in the teapot example, we recreate the pipelines with a hardcoded viewport instead.
-    // This allows the driver to optimize things, at the cost of slower window resizes.
-    // https://computergraphics.stackexchange.com/questions/5742/vulkan-best-way-of-updating-pipeline-viewport
-    let pipeline = GraphicsPipeline::start()
-        .vertex_input_state(
-            BuffersDefinition::new()
-                .vertex::<Vertex>()
-                .vertex::<Normal>()
-                .vertex::<TexCoord>()
-                .instance::<InstanceData>(),
-        )
-        .vertex_shader(vs.entry_point("main").unwrap(), ())
-        .input_assembly_state(InputAssemblyState::new())
-        .viewport_state(ViewportState::viewport_fixed_scissor_irrelevant([
-            Viewport {
-                origin: [0.0, 0.0],
-                dimensions: [dimensions[0] as f32, dimensions[1] as f32],
-                depth_range: 0.0..1.0,
-            },
-        ]))
-        .fragment_shader(fs.entry_point("main").unwrap(), ())
-        .depth_stencil_state(DepthStencilState::simple_depth_test())
-        .render_pass(Subpass::from(render_pass, 0).unwrap())
-        .build(device)
-        .unwrap();
-
-    (pipeline, framebuffers)
 }

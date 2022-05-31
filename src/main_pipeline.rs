@@ -1,7 +1,7 @@
 use std::{io::Cursor, sync::Arc, time::Instant};
 
 use cgmath::{Matrix4, Rad, Point3, Vector3};
-use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool, TypedBufferAccess}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, pipeline::{GraphicsPipeline, Pipeline, PipelineBindPoint}, device::Device, swapchain::{Swapchain, SwapchainCreationError, Surface, acquire_next_image, AcquireError}, shader::ShaderModule, render_pass::{RenderPass, Framebuffer}, sync::{GpuFuture, FlushError, self}, descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet}, command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents}};
+use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool, TypedBufferAccess}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, ImageAccess, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, pipeline::{GraphicsPipeline, Pipeline, PipelineBindPoint, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}}, device::Device, swapchain::{Swapchain, SwapchainCreationError, Surface, acquire_next_image, AcquireError, SwapchainCreateInfo}, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, sync::{GpuFuture, FlushError, self}, descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet}, command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents}};
 use winit::window::Window;
 
 use crate::utils::{Vertex, repeat_element, SIZE, Normal, TexCoord, InstanceData};
@@ -26,11 +26,12 @@ pub struct MainPipeline {
     swapchain: Arc<Swapchain<Window>>,
     surface: Arc<Surface<Window>>,
     rotation_start: Instant,
+    queue: Arc<Queue>,
 }
 
 impl MainPipeline {
 
-    pub fn new(device: Arc<Device>, swapchain: Arc<Swapchain<Window>>,surface: Arc<Surface<Window>>) -> Self {
+    pub fn new(device: Arc<Device>, swapchain: Arc<Swapchain<Window>>,surface: Arc<Surface<Window>>, queue: Arc<Queue>, images: Vec<Arc<SwapchainImage<Window>>>) -> Self {
           // every vertex is duplicated three times for the three normal directions
           let vertices: Vec<Vertex> = repeat_element(
             [
@@ -344,7 +345,8 @@ impl MainPipeline {
             recreate_swapchain: false,
             rotation_start,
             surface,
-            swapchain
+            swapchain,
+            queue,
         }
     }
 
@@ -510,6 +512,68 @@ impl MainPipeline {
         }
     }
 }
+
+
+/// This method is called once during initialization, then again whenever the window is resized
+fn window_size_dependent_setup(
+    device: Arc<Device>,
+    vs: &ShaderModule,
+    fs: &ShaderModule,
+    images: &[Arc<SwapchainImage<Window>>],
+    render_pass: Arc<RenderPass>,
+) -> (Arc<GraphicsPipeline>, Vec<Arc<Framebuffer>>) {
+    let dimensions = images[0].dimensions().width_height();
+
+    let depth_buffer = ImageView::new_default(
+        AttachmentImage::transient(device.clone(), dimensions, Format::D16_UNORM).unwrap(),
+    )
+    .unwrap();
+
+    let framebuffers = images
+        .iter()
+        .map(|image| {
+            let view = ImageView::new_default(image.clone()).unwrap();
+            Framebuffer::new(
+                render_pass.clone(),
+                FramebufferCreateInfo {
+                    attachments: vec![view, depth_buffer.clone()],
+                    ..Default::default()
+                },
+            )
+            .unwrap()
+        })
+        .collect::<Vec<_>>();
+
+    // In the triangle example we use a dynamic viewport, as its a simple example.
+    // However in the teapot example, we recreate the pipelines with a hardcoded viewport instead.
+    // This allows the driver to optimize things, at the cost of slower window resizes.
+    // https://computergraphics.stackexchange.com/questions/5742/vulkan-best-way-of-updating-pipeline-viewport
+    let pipeline = GraphicsPipeline::start()
+        .vertex_input_state(
+            BuffersDefinition::new()
+                .vertex::<Vertex>()
+                .vertex::<Normal>()
+                .vertex::<TexCoord>()
+                .instance::<InstanceData>(),
+        )
+        .vertex_shader(vs.entry_point("main").unwrap(), ())
+        .input_assembly_state(InputAssemblyState::new())
+        .viewport_state(ViewportState::viewport_fixed_scissor_irrelevant([
+            Viewport {
+                origin: [0.0, 0.0],
+                dimensions: [dimensions[0] as f32, dimensions[1] as f32],
+                depth_range: 0.0..1.0,
+            },
+        ]))
+        .fragment_shader(fs.entry_point("main").unwrap(), ())
+        .depth_stencil_state(DepthStencilState::simple_depth_test())
+        .render_pass(Subpass::from(render_pass, 0).unwrap())
+        .build(device)
+        .unwrap();
+
+    (pipeline, framebuffers)
+}
+
 
 mod vs {
     vulkano_shaders::shader! {

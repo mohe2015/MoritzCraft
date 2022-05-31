@@ -38,7 +38,7 @@ impl PoritzCraftWindow {
                     event: WindowEvent::Resized(_),
                     ..
                 } => {
-                    renderer.recreate_swapchain = true;
+                    renderer.main_pipeline.recreate_swapchain = true;
                 }
                 Event::WindowEvent {
                     event: WindowEvent::KeyboardInput { input, .. },
@@ -80,7 +80,7 @@ impl PoritzCraftWindow {
                     ..
                 } => {}
                 Event::RedrawEventsCleared => {
-                    renderer.render();
+                    renderer.main_pipeline.render();
                 }
                 _ => (),
             }
