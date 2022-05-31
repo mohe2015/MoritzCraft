@@ -180,64 +180,7 @@ impl PoritzCraftWindow {
                     ..
                 } => {}
                 Event::RedrawEventsCleared => {
-                    previous_frame_end.as_mut().unwrap().cleanup_finished();
-
-                    if recreate_swapchain {
-                        let (new_swapchain, new_images) =
-                            match swapchain.recreate(SwapchainCreateInfo {
-                                image_extent: surface.window().inner_size().into(),
-                                ..swapchain.create_info()
-                            }) {
-                                Ok(r) => r,
-                                Err(SwapchainCreationError::ImageExtentNotSupported { .. }) => {
-                                    return
-                                }
-                                Err(e) => panic!("Failed to recreate swapchain: {:?}", e),
-                            };
-
-                        swapchain = new_swapchain;
-                        let (new_pipeline, new_framebuffers) = window_size_dependent_setup(
-                            device.clone(),
-                            &vs,
-                            &fs,
-                            &new_images,
-                            render_pass.clone(),
-                        );
-                        pipeline = new_pipeline;
-                        framebuffers = new_framebuffers;
-                        recreate_swapchain = false;
-                    }
-
-
-                    let (image_num, suboptimal, acquire_future) =
-                        match acquire_next_image(swapchain.clone(), None) {
-                            Ok(r) => r,
-                            Err(AcquireError::OutOfDate) => {
-                                recreate_swapchain = true;
-                                return;
-                            }
-                            Err(e) => panic!("Failed to acquire next image: {:?}", e),
-                        };
-
-                    if suboptimal {
-                        recreate_swapchain = true;
-                    }
-
-                    let future = renderer.render(image_num, previous_frame_end);
-
-                    match future {
-                        Ok(future) => {
-                            previous_frame_end = Some(future.boxed());
-                        }
-                        Err(FlushError::OutOfDate) => {
-                            recreate_swapchain = true;
-                            previous_frame_end = Some(sync::now(device.clone()).boxed());
-                        }
-                        Err(e) => {
-                            println!("Failed to flush future: {:?}", e);
-                            previous_frame_end = Some(sync::now(device.clone()).boxed());
-                        }
-                    }
+                   renderer.render();
                 }
                 _ => (),
             }
