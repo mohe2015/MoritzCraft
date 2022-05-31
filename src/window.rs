@@ -6,23 +6,20 @@
 // at your option. All files in the project carrying such
 // notice may not be copied, modified, or distributed except
 // according to those terms.
-use std::time::Instant;
+
 
 use crate::renderer::PoritzCraftRenderer;
-use cgmath::{Matrix3, Matrix4, Point3, Rad, Vector3};
-use vulkano::sync::GpuFuture;
+
+
 use vulkano::{
-    command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents},
-    descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet},
     device::{
         physical::{PhysicalDevice, PhysicalDeviceType},
         Device, DeviceCreateInfo, DeviceExtensions, QueueCreateInfo,
     },
     image::ImageUsage,
     instance::{Instance, InstanceCreateInfo},
-    pipeline::PipelineBindPoint,
     swapchain::{
-        acquire_next_image, AcquireError, Swapchain, SwapchainCreateInfo, SwapchainCreationError,
+        Swapchain, SwapchainCreateInfo,
     },
 };
 use vulkano_win::VkSurfaceBuild;
@@ -94,7 +91,7 @@ impl PoritzCraftWindow {
 
         let queue = queues.next().unwrap();
 
-        let (mut swapchain, images) = {
+        let (swapchain, images) = {
             let surface_capabilities = physical_device
                 .surface_capabilities(&surface, Default::default())
                 .unwrap();
@@ -144,7 +141,7 @@ impl PoritzCraftWindow {
                     event: WindowEvent::KeyboardInput { input, .. },
                     ..
                 } => {
-                    if let Some(key_code) = input.virtual_keycode {
+                    if let Some(_key_code) = input.virtual_keycode {
                         /*
                         match key_code {
                             VirtualKeyCode::Escape => self.should_quit = state_is_pressed(input.state),
@@ -163,15 +160,15 @@ impl PoritzCraftWindow {
                     }
                 }
                 Event::WindowEvent {
-                    event: WindowEvent::MouseInput { state, button, .. },
+                    event: WindowEvent::MouseInput { state: _, button: _, .. },
                     ..
                 } => {}
                 Event::WindowEvent {
-                    event: WindowEvent::CursorMoved { position, .. },
+                    event: WindowEvent::CursorMoved { position: _, .. },
                     ..
                 } => {}
                 Event::WindowEvent {
-                    event: WindowEvent::MouseWheel { delta, .. },
+                    event: WindowEvent::MouseWheel { delta: _, .. },
                     ..
                 } => {}
                 Event::RedrawEventsCleared => {

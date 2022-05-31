@@ -16,8 +16,7 @@ use vulkano::swapchain::Surface;
 use vulkano::{
     buffer::{BufferUsage, CpuAccessibleBuffer, CpuBufferPool},
     command_buffer::{
-        pool::standard::StandardCommandPoolAlloc, AutoCommandBufferBuilder,
-        CommandBufferExecFuture, CommandBufferUsage, PrimaryAutoCommandBuffer, SubpassContents,
+        AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents,
     },
     descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet},
     device::{Device, Queue},
@@ -26,7 +25,6 @@ use vulkano::{
         view::ImageView, AttachmentImage, ImageDimensions, ImmutableImage, MipmapsCount,
         SwapchainImage,
     },
-    memory::pool::{PotentialDedicatedAllocation, StdMemoryPoolAlloc},
     pipeline::{
         graphics::{
             depth_stencil::DepthStencilState,
@@ -42,7 +40,7 @@ use vulkano::{
     swapchain::{
         acquire_next_image, AcquireError, Swapchain, SwapchainCreateInfo, SwapchainCreationError,
     },
-    sync::{self, FlushError, GpuFuture, NowFuture},
+    sync::{self, FlushError, GpuFuture},
 };
 use winit::window::Window;
 
@@ -368,8 +366,8 @@ impl PoritzCraftRenderer {
         )
         .unwrap();
 
-        let (mut pipeline, mut framebuffers) =
-            window_size_dependent_setup(device.clone(), &vs, &fs, &images, render_pass.clone());
+        let (pipeline, framebuffers) =
+            window_size_dependent_setup(device.clone(), &vs, &fs, images, render_pass.clone());
 
         let rotation_start = Instant::now();
 
@@ -457,7 +455,7 @@ impl PoritzCraftRenderer {
             let scale = Matrix4::from_scale(0.01);
 
             let uniform_data = vs::ty::Data {
-                world: Matrix4::from(rotation).into(),
+                world: rotation.into(),
                 view: (view * scale).into(),
                 proj: proj.into(),
             };
