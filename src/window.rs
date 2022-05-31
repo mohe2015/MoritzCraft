@@ -125,9 +125,8 @@ impl PoritzCraftWindow {
             .unwrap()
         };
 
-        let (tex_future, renderer) = PoritzCraftRenderer::new(device, swapchain, queue, images);
 
-        let mut previous_frame_end = Some(tex_future.boxed());
+        let renderer = PoritzCraftRenderer::new(device, swapchain, queue, images);
 
         event_loop.run(move |event, _, control_flow| {
             match event {

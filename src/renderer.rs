@@ -24,10 +24,12 @@ pub struct PoritzCraftRenderer {
     framebuffers: Vec<Arc<Framebuffer>>,
     previous_frame_end: Option<Box<dyn GpuFuture>>,
     recreate_swapchain: bool,
+    vs: ShaderModule,
+    fs: ShaderModule,
 }
 
 impl PoritzCraftRenderer {
-    pub fn new(device: Arc<Device>, swapchain: Arc<Swapchain<Window>>, queue: Arc<Queue>, images: &[Arc<SwapchainImage<Window>>], previous_frame_end: Option<Box<dyn GpuFuture>>) -> (CommandBufferExecFuture<NowFuture, PrimaryAutoCommandBuffer<StandardCommandPoolAlloc>>, Self) {
+    pub fn new(device: Arc<Device>, swapchain: Arc<Swapchain<Window>>, queue: Arc<Queue>, images: &[Arc<SwapchainImage<Window>>]) -> (CommandBufferExecFuture<NowFuture, PrimaryAutoCommandBuffer<StandardCommandPoolAlloc>>, Self) {
         // TODO to render a cube we only need the three visible faces
 
         // every vertex is duplicated three times for the three normal directions
@@ -339,7 +341,9 @@ impl PoritzCraftRenderer {
             sampler,
             texture,
             framebuffers,
-            previous_frame_end,
+            fs,
+            vs,
+            previous_frame_end: Some(tex_future.boxed()),
             recreate_swapchain: false
         })
     }
@@ -363,8 +367,8 @@ impl PoritzCraftRenderer {
             self.swapchain = new_swapchain;
             let (new_pipeline, new_framebuffers) = window_size_dependent_setup(
                 self.device.clone(),
-                &vs,
-                &fs,
+                &self.vs,
+                &self.fs,
                 &new_images,
                 self.render_pass.clone(),
             );
@@ -375,7 +379,7 @@ impl PoritzCraftRenderer {
 
 
         let (image_num, suboptimal, acquire_future) =
-            match acquire_next_image(swapchain.clone(), None) {
+            match acquire_next_image(self.swapchain.clone(), None) {
                 Ok(r) => r,
                 Err(AcquireError::OutOfDate) => {
                     self.recreate_swapchain = true;
