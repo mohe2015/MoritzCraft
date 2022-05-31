@@ -9,7 +9,8 @@ edition = "2021"
 vulkano = "0.29"
 vulkano-shaders = "0.29"
 vulkano-win = "0.29"
-winit = "0.26"
+# https://github.com/rust-windowing/winit/pull/2263
+winit = { git = "https://github.com/rust-windowing/winit" }
 bytemuck = "1"
 cgmath = "0.18"
 png = "0.17"

@@ -79,9 +79,11 @@ impl PoritzCraftRenderer {
         })
         .unwrap();
 
-        let surface = WindowBuilder::new()
-            .build_vk_surface(event_loop, instance.clone())
+        let window = WindowBuilder::new()
+            .build(event_loop)
             .unwrap();
+
+        let surface = vulkano_win::create_surface_from_handle(window, instance.clone()).unwrap();
 
         let device_extensions = DeviceExtensions {
             khr_swapchain: true,
