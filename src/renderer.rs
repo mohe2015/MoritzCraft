@@ -145,9 +145,9 @@ impl PoritzCraftRenderer {
 
 
         Self {
-            queue,
+            main_pipeline: MainPipeline::new(device.clone(), swapchain, surface, queue.clone(), images),
             device,
-            main_pipeline: MainPipeline::new(device, swapchain, surface, queue, images),
+            queue,
         }
     }
 }
