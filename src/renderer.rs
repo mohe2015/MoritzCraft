@@ -80,6 +80,7 @@ impl PoritzCraftRenderer {
         .unwrap();
 
         let window = WindowBuilder::new()
+            .with_title("PoritzCraft")
             .build(event_loop)
             .unwrap();
 
