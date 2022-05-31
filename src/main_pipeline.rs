@@ -1,10 +1,37 @@
 use std::{io::Cursor, sync::Arc, time::Instant};
 
-use cgmath::{Matrix4, Rad, Point3, Vector3};
-use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool, TypedBufferAccess}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, ImageAccess, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, pipeline::{GraphicsPipeline, Pipeline, PipelineBindPoint, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}}, device::{Device, Queue}, swapchain::{Swapchain, SwapchainCreationError, Surface, acquire_next_image, AcquireError, SwapchainCreateInfo}, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, sync::{GpuFuture, FlushError, self}, descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet}, command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents}};
+use cgmath::{Matrix4, Point3, Rad, Vector3};
+use vulkano::{
+    buffer::{BufferUsage, CpuAccessibleBuffer, CpuBufferPool, TypedBufferAccess},
+    command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents},
+    descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet},
+    device::{Device, Queue},
+    format::Format,
+    image::{
+        view::ImageView, AttachmentImage, ImageAccess, ImageDimensions, ImmutableImage,
+        MipmapsCount, SwapchainImage,
+    },
+    pipeline::{
+        graphics::{
+            depth_stencil::DepthStencilState,
+            input_assembly::InputAssemblyState,
+            vertex_input::BuffersDefinition,
+            viewport::{Viewport, ViewportState},
+        },
+        GraphicsPipeline, Pipeline, PipelineBindPoint,
+    },
+    render_pass::{Framebuffer, FramebufferCreateInfo, RenderPass, Subpass},
+    sampler::{Filter, Sampler, SamplerAddressMode, SamplerCreateInfo},
+    shader::ShaderModule,
+    swapchain::{
+        acquire_next_image, AcquireError, Surface, Swapchain, SwapchainCreateInfo,
+        SwapchainCreationError,
+    },
+    sync::{self, FlushError, GpuFuture},
+};
 use winit::window::Window;
 
-use crate::utils::{Vertex, repeat_element, SIZE, Normal, TexCoord, InstanceData};
+use crate::utils::{repeat_element, InstanceData, Normal, TexCoord, Vertex, SIZE};
 
 pub struct MainPipeline {
     vertex_buffer: Arc<CpuAccessibleBuffer<[Vertex]>>,
@@ -20,7 +47,7 @@ pub struct MainPipeline {
     sampler: Arc<Sampler>,
     texture: Arc<ImageView<ImmutableImage>>,
     framebuffers: Vec<Arc<Framebuffer>>,
-    uniform_buffer: CpuBufferPool::<vs::ty::Data>,
+    uniform_buffer: CpuBufferPool<vs::ty::Data>,
     previous_frame_end: Option<Box<dyn GpuFuture>>,
     pub recreate_swapchain: bool,
     swapchain: Arc<Swapchain<Window>>,
@@ -30,10 +57,15 @@ pub struct MainPipeline {
 }
 
 impl MainPipeline {
-
-    pub fn new(device: Arc<Device>, swapchain: Arc<Swapchain<Window>>,surface: Arc<Surface<Window>>, queue: Arc<Queue>, images: Vec<Arc<SwapchainImage<Window>>>) -> Self {
-          // every vertex is duplicated three times for the three normal directions
-          let vertices: Vec<Vertex> = repeat_element(
+    pub fn new(
+        device: Arc<Device>,
+        swapchain: Arc<Swapchain<Window>>,
+        surface: Arc<Surface<Window>>,
+        queue: Arc<Queue>,
+        images: Vec<Arc<SwapchainImage<Window>>>,
+    ) -> Self {
+        // every vertex is duplicated three times for the three normal directions
+        let vertices: Vec<Vertex> = repeat_element(
             [
                 Vertex {
                     position: [-SIZE, -SIZE, -SIZE],
@@ -513,7 +545,6 @@ impl MainPipeline {
     }
 }
 
-
 /// This method is called once during initialization, then again whenever the window is resized
 fn window_size_dependent_setup(
     device: Arc<Device>,
@@ -573,7 +604,6 @@ fn window_size_dependent_setup(
 
     (pipeline, framebuffers)
 }
-
 
 mod vs {
     vulkano_shaders::shader! {
