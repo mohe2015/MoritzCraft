@@ -1,7 +1,7 @@
 use std::{io::Cursor, sync::Arc, time::Instant};
 
 use cgmath::{Rad, Matrix4, Point3, Vector3};
-use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, device::{Device, Queue}, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, pipeline::{GraphicsPipeline, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}, PipelineBindPoint, Pipeline}, swapchain::Swapchain, command_buffer::{CommandBufferExecFuture, PrimaryAutoCommandBuffer, pool::standard::StandardCommandPoolAlloc, AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents}, sync::NowFuture, descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet}, memory::pool::{PotentialDedicatedAllocation, StdMemoryPoolAlloc}};
+use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, device::{Device, Queue}, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, pipeline::{GraphicsPipeline, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}, PipelineBindPoint, Pipeline}, swapchain::Swapchain, command_buffer::{CommandBufferExecFuture, PrimaryAutoCommandBuffer, pool::standard::StandardCommandPoolAlloc, AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents}, sync::{NowFuture, GpuFuture}, descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet}, memory::pool::{PotentialDedicatedAllocation, StdMemoryPoolAlloc}};
 use winit::window::Window;
 use vulkano::image::ImageAccess;
 use crate::utils::{Vertex, repeat_element, SIZE, Normal, TexCoord, InstanceData};
@@ -20,7 +20,8 @@ pub struct PoritzCraftRenderer {
     uniform_buffer: CpuBufferPool::<vs::ty::Data>,
     device: Arc<Device>,
     sampler: Arc<Sampler>,
-    texture: Arc<ImageView<ImmutableImage>>
+    texture: Arc<ImageView<ImmutableImage>>,
+    framebuffers: Vec<Arc<Framebuffer>>
 }
 
 impl PoritzCraftRenderer {
@@ -334,11 +335,12 @@ impl PoritzCraftRenderer {
             uniform_buffer,
             device,
             sampler,
-            texture
+            texture,
+            framebuffers
         })
     }
 
-    pub fn render(&self) {
+    pub fn render(&self, image_num: usize, previous_frame_end: Option<Box<dyn GpuFuture>>) {
         let uniform_buffer_subbuffer = {
             let elapsed = self.rotation_start.elapsed();
             let rotation = elapsed.as_secs() as f64
@@ -397,7 +399,7 @@ impl PoritzCraftRenderer {
         .unwrap();
         builder
             .begin_render_pass(
-                framebuffers[image_num].clone(),
+                self.framebuffers[image_num].clone(),
                 SubpassContents::Inline,
                 vec![[0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
             )

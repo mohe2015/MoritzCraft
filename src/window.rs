@@ -223,7 +223,7 @@ impl PoritzCraftWindow {
                         recreate_swapchain = true;
                     }
 
-                    let future = render();
+                    let future = renderer.render(image_num, previous_frame_end);
 
                     match future {
                         Ok(future) => {
