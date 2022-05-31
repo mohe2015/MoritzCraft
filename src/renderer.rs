@@ -1,7 +1,7 @@
 use std::{io::Cursor, sync::Arc, time::Instant};
 
 use cgmath::{Rad, Matrix4, Point3, Vector3};
-use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, device::{Device, Queue}, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, pipeline::{GraphicsPipeline, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}, PipelineBindPoint, Pipeline}, swapchain::Swapchain, command_buffer::{CommandBufferExecFuture, PrimaryAutoCommandBuffer, pool::standard::StandardCommandPoolAlloc, AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents}, sync::{NowFuture, GpuFuture}, descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet}, memory::pool::{PotentialDedicatedAllocation, StdMemoryPoolAlloc}};
+use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, device::{Device, Queue}, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, pipeline::{GraphicsPipeline, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}, PipelineBindPoint, Pipeline}, swapchain::{Swapchain, SwapchainCreateInfo, SwapchainCreationError, acquire_next_image, AcquireError}, command_buffer::{CommandBufferExecFuture, PrimaryAutoCommandBuffer, pool::standard::StandardCommandPoolAlloc, AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents}, sync::{NowFuture, GpuFuture, FlushError, self}, descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet}, memory::pool::{PotentialDedicatedAllocation, StdMemoryPoolAlloc}};
 use winit::window::Window;
 use vulkano::image::ImageAccess;
 use crate::utils::{Vertex, repeat_element, SIZE, Normal, TexCoord, InstanceData};
@@ -21,11 +21,13 @@ pub struct PoritzCraftRenderer {
     device: Arc<Device>,
     sampler: Arc<Sampler>,
     texture: Arc<ImageView<ImmutableImage>>,
-    framebuffers: Vec<Arc<Framebuffer>>
+    framebuffers: Vec<Arc<Framebuffer>>,
+    previous_frame_end: Option<Box<dyn GpuFuture>>,
+    recreate_swapchain: bool,
 }
 
 impl PoritzCraftRenderer {
-    pub fn new(device: Arc<Device>, swapchain: Arc<Swapchain<Window>>, queue: Arc<Queue>, images: &[Arc<SwapchainImage<Window>>]) -> (CommandBufferExecFuture<NowFuture, PrimaryAutoCommandBuffer<StandardCommandPoolAlloc>>, Self) {
+    pub fn new(device: Arc<Device>, swapchain: Arc<Swapchain<Window>>, queue: Arc<Queue>, images: &[Arc<SwapchainImage<Window>>], previous_frame_end: Option<Box<dyn GpuFuture>>) -> (CommandBufferExecFuture<NowFuture, PrimaryAutoCommandBuffer<StandardCommandPoolAlloc>>, Self) {
         // TODO to render a cube we only need the three visible faces
 
         // every vertex is duplicated three times for the three normal directions
@@ -336,18 +338,20 @@ impl PoritzCraftRenderer {
             device,
             sampler,
             texture,
-            framebuffers
+            framebuffers,
+            previous_frame_end,
+            recreate_swapchain: false
         })
     }
 
     pub fn render(&self) {
-        previous_frame_end.as_mut().unwrap().cleanup_finished();
+        self.previous_frame_end.as_mut().unwrap().cleanup_finished();
 
-        if recreate_swapchain {
+        if self.recreate_swapchain {
             let (new_swapchain, new_images) =
-                match swapchain.recreate(SwapchainCreateInfo {
-                    image_extent: surface.window().inner_size().into(),
-                    ..swapchain.create_info()
+                match self.swapchain.recreate(SwapchainCreateInfo {
+                    image_extent: self.surface.window().inner_size().into(),
+                    ..self.swapchain.create_info()
                 }) {
                     Ok(r) => r,
                     Err(SwapchainCreationError::ImageExtentNotSupported { .. }) => {
@@ -356,17 +360,17 @@ impl PoritzCraftRenderer {
                     Err(e) => panic!("Failed to recreate swapchain: {:?}", e),
                 };
 
-            swapchain = new_swapchain;
+            self.swapchain = new_swapchain;
             let (new_pipeline, new_framebuffers) = window_size_dependent_setup(
-                device.clone(),
+                self.device.clone(),
                 &vs,
                 &fs,
                 &new_images,
-                render_pass.clone(),
+                self.render_pass.clone(),
             );
-            pipeline = new_pipeline;
-            framebuffers = new_framebuffers;
-            recreate_swapchain = false;
+            self.pipeline = new_pipeline;
+            self.framebuffers = new_framebuffers;
+            self.recreate_swapchain = false;
         }
 
 
@@ -374,14 +378,14 @@ impl PoritzCraftRenderer {
             match acquire_next_image(swapchain.clone(), None) {
                 Ok(r) => r,
                 Err(AcquireError::OutOfDate) => {
-                    recreate_swapchain = true;
+                    self.recreate_swapchain = true;
                     return;
                 }
                 Err(e) => panic!("Failed to acquire next image: {:?}", e),
             };
 
         if suboptimal {
-            recreate_swapchain = true;
+            self.recreate_swapchain = true;
         }
 
         let uniform_buffer_subbuffer = {
@@ -482,7 +486,7 @@ impl PoritzCraftRenderer {
             .unwrap();
         let command_buffer = builder.build().unwrap();
 
-        let future = previous_frame_end
+        let future = self.previous_frame_end
             .take()
             .unwrap()
             .join(acquire_future)
@@ -494,15 +498,15 @@ impl PoritzCraftRenderer {
         
             match future {
                 Ok(future) => {
-                    previous_frame_end = Some(future.boxed());
+                    self.previous_frame_end = Some(future.boxed());
                 }
                 Err(FlushError::OutOfDate) => {
-                    recreate_swapchain = true;
-                    previous_frame_end = Some(sync::now(device.clone()).boxed());
+                    self.recreate_swapchain = true;
+                    self.previous_frame_end = Some(sync::now(self.device.clone()).boxed());
                 }
                 Err(e) => {
                     println!("Failed to flush future: {:?}", e);
-                    previous_frame_end = Some(sync::now(device.clone()).boxed());
+                    self.previous_frame_end = Some(sync::now(self.device.clone()).boxed());
                 }
             }
 

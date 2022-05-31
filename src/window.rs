@@ -125,9 +125,7 @@ impl PoritzCraftWindow {
             .unwrap()
         };
 
-        let mut recreate_swapchain = false;
-
-        let (tex_future, renderer) = PoritzCraftRenderer::new(&device, &swapchain, &queue, &images);
+        let (tex_future, renderer) = PoritzCraftRenderer::new(device, swapchain, queue, images);
 
         let mut previous_frame_end = Some(tex_future.boxed());
 
