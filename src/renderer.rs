@@ -28,8 +28,6 @@ use winit::event_loop::EventLoop;
 use winit::window::{WindowBuilder};
 
 pub struct PoritzCraftRenderer {
-    queue: Arc<Queue>,
-    device: Arc<Device>,
     pub main_pipeline: MainPipeline,
 }
 
@@ -130,8 +128,6 @@ impl PoritzCraftRenderer {
                 queue.clone(),
                 images,
             ),
-            device,
-            queue,
         }
     }
 }
