@@ -1,17 +1,26 @@
 use std::time::Instant;
 
-use cgmath::{Matrix3, Rad, Matrix4, Point3, Vector3};
+use cgmath::{Matrix3, Matrix4, Point3, Rad, Vector3};
 use vulkano::{
+    command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents},
+    descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet},
     device::{
         physical::{PhysicalDevice, PhysicalDeviceType},
         Device, DeviceCreateInfo, DeviceExtensions, QueueCreateInfo,
     },
     image::ImageUsage,
     instance::{Instance, InstanceCreateInfo},
-    swapchain::{Swapchain, SwapchainCreateInfo, SwapchainCreationError, acquire_next_image, AcquireError}, descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet}, command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents}, pipeline::PipelineBindPoint,
+    pipeline::PipelineBindPoint,
+    swapchain::{
+        acquire_next_image, AcquireError, Swapchain, SwapchainCreateInfo, SwapchainCreationError,
+    },
 };
 use vulkano_win::VkSurfaceBuild;
-use winit::{event_loop::{EventLoop, ControlFlow}, window::WindowBuilder, event::{Event, WindowEvent}};
+use winit::{
+    event::{Event, WindowEvent},
+    event_loop::{ControlFlow, EventLoop},
+    window::WindowBuilder,
+};
 
 // Copyright (c) 2021 The vulkano developers
 // Licensed under the Apache License, Version 2.0
@@ -116,150 +125,151 @@ impl PoritzCraftWindow {
 
         let mut recreate_swapchain = false;
 
-    let mut previous_frame_end = Some(tex_future.boxed());
-    let rotation_start = Instant::now();
+        let mut previous_frame_end = Some(tex_future.boxed());
+        let rotation_start = Instant::now();
 
-
-    event_loop.run(move |event, _, control_flow| {
-        match event {
-            Event::WindowEvent {
-                event: WindowEvent::CloseRequested,
-                ..
-            } => {
-                *control_flow = ControlFlow::Exit;
-            }
-            Event::WindowEvent {
-                event: WindowEvent::Resized(_),
-                ..
-            } => {
-                recreate_swapchain = true;
-            }
-            Event::WindowEvent {
-                event: WindowEvent::KeyboardInput { input, .. },
-                ..
-            } => {
-                if let Some(key_code) = input.virtual_keycode {
-                    /*
-                    match key_code {
-                        VirtualKeyCode::Escape => self.should_quit = state_is_pressed(input.state),
-                        VirtualKeyCode::W => self.pan_up = state_is_pressed(input.state),
-                        VirtualKeyCode::A => self.pan_left = state_is_pressed(input.state),
-                        VirtualKeyCode::S => self.pan_down = state_is_pressed(input.state),
-                        VirtualKeyCode::D => self.pan_right = state_is_pressed(input.state),
-                        VirtualKeyCode::F => self.toggle_full_screen = state_is_pressed(input.state),
-                        VirtualKeyCode::Return => self.randomize_palette = state_is_pressed(input.state),
-                        VirtualKeyCode::Equals => self.increase_iterations = state_is_pressed(input.state),
-                        VirtualKeyCode::Minus => self.decrease_iterations = state_is_pressed(input.state),
-                        VirtualKeyCode::Space => self.toggle_julia = state_is_pressed(input.state),
-                        _ => (),
-                    }
-                    */
+        event_loop.run(move |event, _, control_flow| {
+            match event {
+                Event::WindowEvent {
+                    event: WindowEvent::CloseRequested,
+                    ..
+                } => {
+                    *control_flow = ControlFlow::Exit;
                 }
-            }
-            Event::WindowEvent {
-                event: WindowEvent::MouseInput { state, button, .. },
-                ..
-            } => {}
-            Event::WindowEvent {
-                event: WindowEvent::CursorMoved { position, .. },
-                ..
-            } => {}
-            Event::WindowEvent {
-                event: WindowEvent::MouseWheel { delta, .. },
-                ..
-            } => {}
-            Event::RedrawEventsCleared => {
-                previous_frame_end.as_mut().unwrap().cleanup_finished();
-
-                if recreate_swapchain {
-                    let (new_swapchain, new_images) =
-                        match swapchain.recreate(SwapchainCreateInfo {
-                            image_extent: surface.window().inner_size().into(),
-                            ..swapchain.create_info()
-                        }) {
-                            Ok(r) => r,
-                            Err(SwapchainCreationError::ImageExtentNotSupported { .. }) => return,
-                            Err(e) => panic!("Failed to recreate swapchain: {:?}", e),
-                        };
-
-                    swapchain = new_swapchain;
-                    let (new_pipeline, new_framebuffers) = window_size_dependent_setup(
-                        device.clone(),
-                        &vs,
-                        &fs,
-                        &new_images,
-                        render_pass.clone(),
-                    );
-                    pipeline = new_pipeline;
-                    framebuffers = new_framebuffers;
-                    recreate_swapchain = false;
-                }
-
-                let uniform_buffer_subbuffer = {
-                    let elapsed = rotation_start.elapsed();
-                    let rotation =
-                        elapsed.as_secs() as f64 + elapsed.subsec_nanos() as f64 / 1_000_000_000.0;
-                    let rotation = Matrix3::from_angle_y(Rad(rotation as f32));
-
-                    // note: this teapot was meant for OpenGL where the origin is at the lower left
-                    //       instead the origin is at the upper left in Vulkan, so we reverse the Y axis
-                    let aspect_ratio =
-                        swapchain.image_extent()[0] as f32 / swapchain.image_extent()[1] as f32;
-                    let proj = cgmath::perspective(
-                        Rad(std::f32::consts::FRAC_PI_2),
-                        aspect_ratio,
-                        0.01,
-                        100.0,
-                    );
-                    let view = Matrix4::look_at_rh(
-                        Point3::new(0.3, 0.3, 1.0),
-                        Point3::new(0.0, 0.0, 0.0),
-                        Vector3::new(0.0, -1.0, 0.0),
-                    );
-                    let scale = Matrix4::from_scale(0.01);
-
-                    let uniform_data = vs::ty::Data {
-                        world: Matrix4::from(rotation).into(),
-                        view: (view * scale).into(),
-                        proj: proj.into(),
-                    };
-
-                    uniform_buffer.next(uniform_data).unwrap()
-                };
-
-                let (image_num, suboptimal, acquire_future) =
-                    match acquire_next_image(swapchain.clone(), None) {
-                        Ok(r) => r,
-                        Err(AcquireError::OutOfDate) => {
-                            recreate_swapchain = true;
-                            return;
-                        }
-                        Err(e) => panic!("Failed to acquire next image: {:?}", e),
-                    };
-
-                if suboptimal {
+                Event::WindowEvent {
+                    event: WindowEvent::Resized(_),
+                    ..
+                } => {
                     recreate_swapchain = true;
                 }
-
-                let future = render();
-
-                match future {
-                    Ok(future) => {
-                        previous_frame_end = Some(future.boxed());
-                    }
-                    Err(FlushError::OutOfDate) => {
-                        recreate_swapchain = true;
-                        previous_frame_end = Some(sync::now(device.clone()).boxed());
-                    }
-                    Err(e) => {
-                        println!("Failed to flush future: {:?}", e);
-                        previous_frame_end = Some(sync::now(device.clone()).boxed());
+                Event::WindowEvent {
+                    event: WindowEvent::KeyboardInput { input, .. },
+                    ..
+                } => {
+                    if let Some(key_code) = input.virtual_keycode {
+                        /*
+                        match key_code {
+                            VirtualKeyCode::Escape => self.should_quit = state_is_pressed(input.state),
+                            VirtualKeyCode::W => self.pan_up = state_is_pressed(input.state),
+                            VirtualKeyCode::A => self.pan_left = state_is_pressed(input.state),
+                            VirtualKeyCode::S => self.pan_down = state_is_pressed(input.state),
+                            VirtualKeyCode::D => self.pan_right = state_is_pressed(input.state),
+                            VirtualKeyCode::F => self.toggle_full_screen = state_is_pressed(input.state),
+                            VirtualKeyCode::Return => self.randomize_palette = state_is_pressed(input.state),
+                            VirtualKeyCode::Equals => self.increase_iterations = state_is_pressed(input.state),
+                            VirtualKeyCode::Minus => self.decrease_iterations = state_is_pressed(input.state),
+                            VirtualKeyCode::Space => self.toggle_julia = state_is_pressed(input.state),
+                            _ => (),
+                        }
+                        */
                     }
                 }
+                Event::WindowEvent {
+                    event: WindowEvent::MouseInput { state, button, .. },
+                    ..
+                } => {}
+                Event::WindowEvent {
+                    event: WindowEvent::CursorMoved { position, .. },
+                    ..
+                } => {}
+                Event::WindowEvent {
+                    event: WindowEvent::MouseWheel { delta, .. },
+                    ..
+                } => {}
+                Event::RedrawEventsCleared => {
+                    previous_frame_end.as_mut().unwrap().cleanup_finished();
+
+                    if recreate_swapchain {
+                        let (new_swapchain, new_images) =
+                            match swapchain.recreate(SwapchainCreateInfo {
+                                image_extent: surface.window().inner_size().into(),
+                                ..swapchain.create_info()
+                            }) {
+                                Ok(r) => r,
+                                Err(SwapchainCreationError::ImageExtentNotSupported { .. }) => {
+                                    return
+                                }
+                                Err(e) => panic!("Failed to recreate swapchain: {:?}", e),
+                            };
+
+                        swapchain = new_swapchain;
+                        let (new_pipeline, new_framebuffers) = window_size_dependent_setup(
+                            device.clone(),
+                            &vs,
+                            &fs,
+                            &new_images,
+                            render_pass.clone(),
+                        );
+                        pipeline = new_pipeline;
+                        framebuffers = new_framebuffers;
+                        recreate_swapchain = false;
+                    }
+
+                    let uniform_buffer_subbuffer = {
+                        let elapsed = rotation_start.elapsed();
+                        let rotation = elapsed.as_secs() as f64
+                            + elapsed.subsec_nanos() as f64 / 1_000_000_000.0;
+                        let rotation = Matrix3::from_angle_y(Rad(rotation as f32));
+
+                        // note: this teapot was meant for OpenGL where the origin is at the lower left
+                        //       instead the origin is at the upper left in Vulkan, so we reverse the Y axis
+                        let aspect_ratio =
+                            swapchain.image_extent()[0] as f32 / swapchain.image_extent()[1] as f32;
+                        let proj = cgmath::perspective(
+                            Rad(std::f32::consts::FRAC_PI_2),
+                            aspect_ratio,
+                            0.01,
+                            100.0,
+                        );
+                        let view = Matrix4::look_at_rh(
+                            Point3::new(0.3, 0.3, 1.0),
+                            Point3::new(0.0, 0.0, 0.0),
+                            Vector3::new(0.0, -1.0, 0.0),
+                        );
+                        let scale = Matrix4::from_scale(0.01);
+
+                        let uniform_data = vs::ty::Data {
+                            world: Matrix4::from(rotation).into(),
+                            view: (view * scale).into(),
+                            proj: proj.into(),
+                        };
+
+                        uniform_buffer.next(uniform_data).unwrap()
+                    };
+
+                    let (image_num, suboptimal, acquire_future) =
+                        match acquire_next_image(swapchain.clone(), None) {
+                            Ok(r) => r,
+                            Err(AcquireError::OutOfDate) => {
+                                recreate_swapchain = true;
+                                return;
+                            }
+                            Err(e) => panic!("Failed to acquire next image: {:?}", e),
+                        };
+
+                    if suboptimal {
+                        recreate_swapchain = true;
+                    }
+
+                    let future = render();
+
+                    match future {
+                        Ok(future) => {
+                            previous_frame_end = Some(future.boxed());
+                        }
+                        Err(FlushError::OutOfDate) => {
+                            recreate_swapchain = true;
+                            previous_frame_end = Some(sync::now(device.clone()).boxed());
+                        }
+                        Err(e) => {
+                            println!("Failed to flush future: {:?}", e);
+                            previous_frame_end = Some(sync::now(device.clone()).boxed());
+                        }
+                    }
+                }
+                _ => (),
             }
-            _ => (),
-        }
-    });
+        });
     }
 }
 
