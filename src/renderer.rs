@@ -1,14 +1,16 @@
 use std::{io::Cursor, sync::Arc};
 
-use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, device::Device, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, pipeline::{GraphicsPipeline, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}}};
+use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, device::{Device, Queue}, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, pipeline::{GraphicsPipeline, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}}, swapchain::Swapchain};
 use winit::window::Window;
-
+use vulkano::image::ImageAccess;
 use crate::utils::{Vertex, repeat_element, SIZE, Normal, TexCoord, InstanceData};
 
-pub struct PoritzCraftRenderer {}
+pub struct PoritzCraftRenderer {
+
+}
 
 impl PoritzCraftRenderer {
-    pub fn new() {
+    pub fn new(device: &Arc<Device>, swapchain: &Arc<Swapchain<Window>>, queue: &Arc<Queue>, images: &[Arc<SwapchainImage<Window>>]) -> Self {
         // TODO to render a cube we only need the three visible faces
 
         // every vertex is duplicated three times for the three normal directions
