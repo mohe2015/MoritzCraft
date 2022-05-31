@@ -10,18 +10,6 @@ pub mod renderer;
 pub mod utils;
 pub mod window;
 
-
-
-
-
-
-
-
-
-
-
-
-
 use crate::window::PoritzCraftWindow;
 
 pub fn main() {
