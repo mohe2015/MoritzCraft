@@ -130,7 +130,6 @@ impl PoritzCraftWindow {
         let (tex_future, renderer) = PoritzCraftRenderer::new(&device, &swapchain, &queue, &images);
 
         let mut previous_frame_end = Some(tex_future.boxed());
-        let rotation_start = Instant::now();
 
         event_loop.run(move |event, _, control_flow| {
             match event {
@@ -209,37 +208,6 @@ impl PoritzCraftWindow {
                         recreate_swapchain = false;
                     }
 
-                    let uniform_buffer_subbuffer = {
-                        let elapsed = rotation_start.elapsed();
-                        let rotation = elapsed.as_secs() as f64
-                            + elapsed.subsec_nanos() as f64 / 1_000_000_000.0;
-                        let rotation = Matrix3::from_angle_y(Rad(rotation as f32));
-
-                        // note: this teapot was meant for OpenGL where the origin is at the lower left
-                        //       instead the origin is at the upper left in Vulkan, so we reverse the Y axis
-                        let aspect_ratio =
-                            swapchain.image_extent()[0] as f32 / swapchain.image_extent()[1] as f32;
-                        let proj = cgmath::perspective(
-                            Rad(std::f32::consts::FRAC_PI_2),
-                            aspect_ratio,
-                            0.01,
-                            100.0,
-                        );
-                        let view = Matrix4::look_at_rh(
-                            Point3::new(0.3, 0.3, 1.0),
-                            Point3::new(0.0, 0.0, 0.0),
-                            Vector3::new(0.0, -1.0, 0.0),
-                        );
-                        let scale = Matrix4::from_scale(0.01);
-
-                        let uniform_data = vs::ty::Data {
-                            world: Matrix4::from(rotation).into(),
-                            view: (view * scale).into(),
-                            proj: proj.into(),
-                        };
-
-                        uniform_buffer.next(uniform_data).unwrap()
-                    };
 
                     let (image_num, suboptimal, acquire_future) =
                         match acquire_next_image(swapchain.clone(), None) {

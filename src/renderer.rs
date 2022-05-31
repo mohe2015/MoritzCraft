@@ -1,5 +1,6 @@
-use std::{io::Cursor, sync::Arc};
+use std::{io::Cursor, sync::Arc, time::Instant};
 
+use cgmath::{Rad, Matrix4, Point3, Vector3};
 use vulkano::{buffer::{CpuAccessibleBuffer, BufferUsage, CpuBufferPool}, format::Format, image::{ImageDimensions, ImmutableImage, MipmapsCount, view::ImageView, SwapchainImage, AttachmentImage}, sampler::{Sampler, SamplerCreateInfo, Filter, SamplerAddressMode}, device::{Device, Queue}, shader::ShaderModule, render_pass::{RenderPass, Framebuffer, FramebufferCreateInfo, Subpass}, pipeline::{GraphicsPipeline, graphics::{vertex_input::BuffersDefinition, input_assembly::InputAssemblyState, viewport::{ViewportState, Viewport}, depth_stencil::DepthStencilState}, PipelineBindPoint, Pipeline}, swapchain::Swapchain, command_buffer::{CommandBufferExecFuture, PrimaryAutoCommandBuffer, pool::standard::StandardCommandPoolAlloc, AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents}, sync::NowFuture, descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet}, memory::pool::{PotentialDedicatedAllocation, StdMemoryPoolAlloc}};
 use winit::window::Window;
 use vulkano::image::ImageAccess;
@@ -13,11 +14,17 @@ pub struct PoritzCraftRenderer {
     index_buffer: Arc<CpuAccessibleBuffer<[u16]>>,
     instance_buffer: Arc<CpuAccessibleBuffer<[InstanceData]>>,
     pipeline: Arc<GraphicsPipeline>,
-
+    rotation_start: Instant,
+    swapchain: Arc<Swapchain<Window>>,
+    queue: Arc<Queue>,
+    uniform_buffer: CpuBufferPool::<vs::ty::Data>,
+    device: Arc<Device>,
+    sampler: Arc<Sampler>,
+    texture: Arc<ImageView<ImmutableImage>>
 }
 
 impl PoritzCraftRenderer {
-    pub fn new(device: &Arc<Device>, swapchain: &Arc<Swapchain<Window>>, queue: &Arc<Queue>, images: &[Arc<SwapchainImage<Window>>]) -> (CommandBufferExecFuture<NowFuture, PrimaryAutoCommandBuffer<StandardCommandPoolAlloc>>, Self) {
+    pub fn new(device: Arc<Device>, swapchain: Arc<Swapchain<Window>>, queue: Arc<Queue>, images: &[Arc<SwapchainImage<Window>>]) -> (CommandBufferExecFuture<NowFuture, PrimaryAutoCommandBuffer<StandardCommandPoolAlloc>>, Self) {
         // TODO to render a cube we only need the three visible faces
 
         // every vertex is duplicated three times for the three normal directions
@@ -312,6 +319,8 @@ impl PoritzCraftRenderer {
         let (mut pipeline, mut framebuffers) =
             window_size_dependent_setup(device.clone(), &vs, &fs, &images, render_pass.clone());
 
+        let rotation_start = Instant::now();
+
         (tex_future, Self {
             index_buffer,
             normals_buffer,
@@ -319,11 +328,49 @@ impl PoritzCraftRenderer {
             vertex_buffer,
             instance_buffer,
             pipeline,
-
+            rotation_start,
+            swapchain,
+            queue,
+            uniform_buffer,
+            device,
+            sampler,
+            texture
         })
     }
 
     pub fn render(&self) {
+        let uniform_buffer_subbuffer = {
+            let elapsed = self.rotation_start.elapsed();
+            let rotation = elapsed.as_secs() as f64
+                + elapsed.subsec_nanos() as f64 / 1_000_000_000.0;
+            let rotation = Matrix4::from_angle_y(Rad(rotation as f32));
+
+            // note: this teapot was meant for OpenGL where the origin is at the lower left
+            //       instead the origin is at the upper left in Vulkan, so we reverse the Y axis
+            let aspect_ratio =
+                self.swapchain.image_extent()[0] as f32 / self.swapchain.image_extent()[1] as f32;
+            let proj = cgmath::perspective(
+                Rad(std::f32::consts::FRAC_PI_2),
+                aspect_ratio,
+                0.01,
+                100.0,
+            );
+            let view = Matrix4::look_at_rh(
+                Point3::new(0.3, 0.3, 1.0),
+                Point3::new(0.0, 0.0, 0.0),
+                Vector3::new(0.0, -1.0, 0.0),
+            );
+            let scale = Matrix4::from_scale(0.01);
+
+            let uniform_data = vs::ty::Data {
+                world: Matrix4::from(rotation).into(),
+                view: (view * scale).into(),
+                proj: proj.into(),
+            };
+
+            self.uniform_buffer.next(uniform_data).unwrap()
+        };
+
         let layout = self.pipeline.layout().set_layouts().get(0).unwrap();
         let set = PersistentDescriptorSet::new(
             layout.clone(),
@@ -336,15 +383,15 @@ impl PoritzCraftRenderer {
             layout2.clone(),
             [WriteDescriptorSet::image_view_sampler(
                 0,
-                texture.clone(),
-                sampler.clone(),
+                self.texture.clone(),
+                self.sampler.clone(),
             )],
         )
         .unwrap();
 
         let mut builder = AutoCommandBufferBuilder::primary(
-            device.clone(),
-            queue.family(),
+            self.device.clone(),
+            self.queue.family(),
             CommandBufferUsage::OneTimeSubmit,
         )
         .unwrap();
@@ -394,9 +441,9 @@ impl PoritzCraftRenderer {
             .take()
             .unwrap()
             .join(acquire_future)
-            .then_execute(queue.clone(), command_buffer)
+            .then_execute(self.queue.clone(), command_buffer)
             .unwrap()
-            .then_swapchain_present(queue.clone(), swapchain.clone(), image_num)
+            .then_swapchain_present(self.queue.clone(), self.swapchain.clone(), image_num)
             .then_signal_fence_and_flush();
 
         future

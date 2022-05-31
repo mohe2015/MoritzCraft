@@ -1,3 +1,6 @@
+Refactor as close as possible to https://github.com/vulkano-rs/vulkano/blob/v0.29.0/examples/src/bin/interactive_fractal/renderer.rs
+
+
 Important ones:
 https://github.com/vulkano-rs/vulkano/blob/v0.29.0/examples/src/bin/image/main.rs
 https://github.com/vulkano-rs/vulkano/blob/v0.29.0/examples/src/bin/instancing.rs
