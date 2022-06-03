@@ -89,66 +89,91 @@ impl MainPipeline {
             normal: [0.0, 0.0, SIZE],
         };
 
-        let normals: Vec<Normal> = vec![
-            N_LEFT, N_TOP, N_FRONT, N_RIGHT, N_TOP, N_FRONT, N_RIGHT, N_BOTTOM, N_FRONT, N_LEFT,
-            N_BOTTOM, N_FRONT, // repeat with N_BACK
-            N_LEFT, N_TOP, N_BACK, N_RIGHT, N_TOP, N_BACK, N_RIGHT, N_BOTTOM, N_BACK, N_LEFT,
-            N_BOTTOM, N_BACK,
-        ];
-
-        let vertices: Vec<(Vertex, Normal, TexCoord)> = vec![(
-            Vertex {
-                position: [-SIZE, -SIZE, -SIZE],
-            },
-            N_FRONT,
+        let texs = vec![
             TexCoord {
                 tex_coord: [0.0, 0.0],
             },
-        ), (
-            Vertex {
-                position: [-SIZE, SIZE, -SIZE],
-            },
-            N_FRONT,
             TexCoord {
                 tex_coord: [0.0, 1.0],
             },
-        ), (
-            Vertex {
-                position: [SIZE, SIZE, -SIZE],
-            },
-            N_FRONT,
             TexCoord {
                 tex_coord: [1.0, 1.0],
             },
-        ),
-        //
-        (
-            Vertex {
-                position: [SIZE, SIZE, -SIZE],
-            },
-            N_FRONT,
             TexCoord {
                 tex_coord: [1.0, 1.0],
             },
-        ),
-        (
-            Vertex {
-                position: [SIZE, -SIZE, -SIZE],
-            },
-            N_FRONT,
             TexCoord {
                 tex_coord: [1.0, 0.0],
             },
-        ),
-        (
-            Vertex {
-                position: [-SIZE, -SIZE, -SIZE],
-            },
-            N_FRONT,
             TexCoord {
                 tex_coord: [0.0, 0.0],
             },
-        ),
+        ];
+
+        let vertices: Vec<(Vertex, Normal, TexCoord)> = vec![
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, -SIZE],
+                },
+                N_FRONT,
+                texs[0],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, SIZE, -SIZE],
+                },
+                N_FRONT,
+                texs[1],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, SIZE, -SIZE],
+                },
+                N_FRONT,
+                texs[2],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, SIZE, -SIZE],
+                },
+                N_FRONT,
+                texs[3],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, -SIZE, -SIZE],
+                },
+                N_FRONT,
+                texs[4],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, -SIZE],
+                },
+                N_FRONT,
+                texs[5],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, -SIZE, SIZE],
+                },
+                N_BACK,
+                texs[0],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, SIZE, SIZE],
+                },
+                N_BACK,
+                texs[1],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, SIZE, SIZE],
+                },
+                N_BACK,
+                texs[2],
+            ),
         ];
 
         let (vertex_buffer, vertex_buffer_future) = ImmutableBuffer::from_iter(
