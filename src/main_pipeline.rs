@@ -74,7 +74,7 @@ impl MainPipeline {
         // these coords are stupid because they don't match screen
 
         // x right
-        // y down
+        // y up?
         // z back
 
         // counter clockwise around the whole face
@@ -328,6 +328,55 @@ impl MainPipeline {
                     position: [-SIZE, SIZE, SIZE],
                 },
                 N_TOP,
+                texs[5],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, -SIZE],
+                },
+                N_BOTTOM,
+                texs[0],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, SIZE],
+                },
+                N_BOTTOM,
+                texs[1],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, -SIZE, SIZE],
+                },
+                N_BOTTOM,
+                texs[2],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, -SIZE, SIZE],
+                },
+                N_BOTTOM,
+                texs[2],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, -SIZE, SIZE],
+                },
+                N_BOTTOM,
+                texs[3],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, -SIZE, -SIZE],
+                },
+                N_BOTTOM,
+                texs[4],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, -SIZE],
+                },
+                N_BOTTOM,
                 texs[5],
             ),
         ];
