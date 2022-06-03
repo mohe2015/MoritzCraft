@@ -302,6 +302,27 @@ impl MainPipeline {
                 N_TOP,
                 texs[2],
             ),
+            (
+                Vertex {
+                    position: [SIZE, SIZE, -SIZE],
+                },
+                N_TOP,
+                texs[3],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, SIZE, SIZE],
+                },
+                N_TOP,
+                texs[4],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, SIZE, SIZE],
+                },
+                N_TOP,
+                texs[5],
+            ),
         ];
 
         let (vertex_buffer, vertex_buffer_future) = ImmutableBuffer::from_iter(
@@ -372,7 +393,7 @@ impl MainPipeline {
         .unwrap();
 
         let (texture, tex_future) = {
-            let png_bytes = include_bytes!("grass_block_side.png").to_vec();
+            let png_bytes = include_bytes!("dirt.png").to_vec();
             let cursor = Cursor::new(png_bytes);
             let decoder = png::Decoder::new(cursor);
             let mut reader = decoder.read_info().unwrap();
