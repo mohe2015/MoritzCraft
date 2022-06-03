@@ -110,7 +110,7 @@ impl MainPipeline {
             },
             N_FRONT,
             TexCoord {
-                tex_coord: [0.0, 0.0],
+                tex_coord: [0.0, 1.0],
             },
         ), (
             Vertex {
@@ -118,9 +118,38 @@ impl MainPipeline {
             },
             N_FRONT,
             TexCoord {
+                tex_coord: [1.0, 1.0],
+            },
+        ),
+        //
+        (
+            Vertex {
+                position: [SIZE, SIZE, -SIZE],
+            },
+            N_FRONT,
+            TexCoord {
+                tex_coord: [1.0, 1.0],
+            },
+        ),
+        (
+            Vertex {
+                position: [SIZE, -SIZE, -SIZE],
+            },
+            N_FRONT,
+            TexCoord {
+                tex_coord: [1.0, 0.0],
+            },
+        ),
+        (
+            Vertex {
+                position: [-SIZE, -SIZE, -SIZE],
+            },
+            N_FRONT,
+            TexCoord {
                 tex_coord: [0.0, 0.0],
             },
-        )];
+        ),
+        ];
 
         let (vertex_buffer, vertex_buffer_future) = ImmutableBuffer::from_iter(
             vertices.iter().map(|e| e.0),
