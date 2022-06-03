@@ -356,13 +356,6 @@ impl MainPipeline {
                     position: [SIZE, -SIZE, SIZE],
                 },
                 N_BOTTOM,
-                texs[2],
-            ),
-            (
-                Vertex {
-                    position: [SIZE, -SIZE, SIZE],
-                },
-                N_BOTTOM,
                 texs[3],
             ),
             (
