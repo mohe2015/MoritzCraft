@@ -197,42 +197,42 @@ impl MainPipeline {
             ),
             (
                 Vertex {
-                    position: [SIZE, -SIZE, SIZE],
+                    position: [SIZE, -SIZE, -SIZE],
                 },
                 N_RIGHT,
                 texs[0],
             ),
             (
                 Vertex {
-                    position: [SIZE, SIZE, SIZE],
+                    position: [SIZE, SIZE, -SIZE],
                 },
                 N_RIGHT,
                 texs[1],
             ),
             (
                 Vertex {
-                    position: [SIZE, SIZE, -SIZE],
+                    position: [SIZE, SIZE, SIZE],
                 },
                 N_RIGHT,
                 texs[2],
             ),
             (
                 Vertex {
-                    position: [SIZE, SIZE, -SIZE],
+                    position: [SIZE, SIZE, SIZE],
                 },
                 N_RIGHT,
                 texs[3],
             ),
             (
                 Vertex {
-                    position: [SIZE, -SIZE, -SIZE],
+                    position: [SIZE, -SIZE, SIZE],
                 },
                 N_RIGHT,
                 texs[4],
             ),
             (
                 Vertex {
-                    position: [SIZE, -SIZE, SIZE],
+                    position: [SIZE, -SIZE, -SIZE],
                 },
                 N_RIGHT,
                 texs[5],
