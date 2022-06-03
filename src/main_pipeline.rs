@@ -66,8 +66,8 @@ impl MainPipeline {
     ) -> Self {
         // these coords are stupid because they don't match screen
 
-        // x right
-        // y up
+        // x left
+        // y down
         // z back
 
         // counter clockwise around the whole face
