@@ -16,9 +16,9 @@ use vulkano::{
             depth_stencil::DepthStencilState,
             input_assembly::{InputAssemblyState},
             vertex_input::BuffersDefinition,
-            viewport::{Viewport, ViewportState},
+            viewport::{Viewport, ViewportState}, rasterization::{RasterizationState, CullMode},
         },
-        GraphicsPipeline, Pipeline, PipelineBindPoint,
+        GraphicsPipeline, Pipeline, PipelineBindPoint, StateMode,
     },
     render_pass::{Framebuffer, FramebufferCreateInfo, RenderPass, Subpass},
     sampler::{Filter, Sampler, SamplerAddressMode, SamplerCreateInfo},
@@ -274,9 +274,9 @@ impl MainPipeline {
         // For this example, we'll have the instances form a 10x10 grid that slowly gets larger.
         let instances = {
             let mut data = Vec::new();
-            for x in 0..100 {
+            for x in 0..1000 {
                 for y in 0..1 {
-                    for z in 0..100 {
+                    for z in 0..1000 {
                         data.push(InstanceData {
                             position_offset: [x as f32 * 20.0, y as f32 * 20.0, z as f32 * 20.0],
                         });
@@ -606,6 +606,10 @@ fn window_size_dependent_setup(
         .fragment_shader(fs.entry_point("main").unwrap(), ())
         .depth_stencil_state(DepthStencilState::simple_depth_test())
         .render_pass(Subpass::from(render_pass, 0).unwrap())
+        .rasterization_state(RasterizationState {
+            cull_mode: StateMode::Fixed(CullMode::Back),
+            ..Default::default()
+        })
         .build(device)
         .unwrap();
 
@@ -620,6 +624,7 @@ mod vs {
             use bytemuck::{Pod, Zeroable};
 
             #[derive(Clone, Copy, Zeroable, Pod)]
+     
         },
     }
 }
