@@ -45,6 +45,9 @@ impl PoritzCraftWindow {
             } => {
                 if let Some(key_code) = input.virtual_keycode {
                     match key_code {
+                        VirtualKeyCode::LControl => {
+                            renderer.main_pipeline.control = state_is_pressed(input.state)
+                        }
                         VirtualKeyCode::W => {
                             renderer.main_pipeline.pan_up = state_is_pressed(input.state)
                         }

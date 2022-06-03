@@ -61,6 +61,7 @@ pub struct MainPipeline {
     pub pan_left: bool,
     pub pan_down: bool,
     pub pan_right: bool,
+    pub control: bool,
 }
 
 impl MainPipeline {
@@ -516,6 +517,7 @@ impl MainPipeline {
             pan_left: false,
             pan_right: false,
             pan_up: false,
+            control: false,
             world_position: Matrix4::from_scale(1.0),
         }
     }
@@ -571,17 +573,29 @@ impl MainPipeline {
                         let rotation_mat2 = Matrix4::from_angle_x(Rad((rotation/10f64) as f32));
 
             */
-            if self.pan_left {
+            if !self.control && self.pan_left {
                 self.world_position = self.world_position * Matrix4::from_angle_y(Rad(0.1));
             }
-            if self.pan_right {
+            if !self.control && self.pan_right {
                 self.world_position = self.world_position * Matrix4::from_angle_y(Rad(-0.1));
             }
-            if self.pan_up {
+            if !self.control && self.pan_up {
                 self.world_position = self.world_position * Matrix4::from_angle_x(Rad(0.1));
             }
-            if self.pan_down {
+            if !self.control && self.pan_down {
                 self.world_position = self.world_position * Matrix4::from_angle_x(Rad(-0.1));
+            }
+            if self.control && self.pan_up {
+                self.world_position = self.world_position * Matrix4::from_translation(Vector3::new(2.0,0.0,0.0));
+            }
+            if self.control && self.pan_down {
+                self.world_position = self.world_position * Matrix4::from_translation(Vector3::new(-2.0,0.0,0.0));
+            }
+            if self.control && self.pan_left {
+                self.world_position = self.world_position * Matrix4::from_translation(Vector3::new(0.0,0.0,2.0));
+            }
+            if self.control && self.pan_right {
+                self.world_position = self.world_position * Matrix4::from_translation(Vector3::new(0.0,0.0,-2.0));
             }
 
             // note: this teapot was meant for OpenGL where the origin is at the lower left
