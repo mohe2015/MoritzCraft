@@ -237,6 +237,48 @@ impl MainPipeline {
                 N_RIGHT,
                 texs[5],
             ),
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, SIZE],
+                },
+                N_LEFT,
+                texs[0],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, SIZE, SIZE],
+                },
+                N_LEFT,
+                texs[1],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, SIZE, -SIZE],
+                },
+                N_LEFT,
+                texs[2],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, SIZE, -SIZE],
+                },
+                N_LEFT,
+                texs[3],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, -SIZE],
+                },
+                N_LEFT,
+                texs[4],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, SIZE],
+                },
+                N_LEFT,
+                texs[5],
+            ),
         ];
 
         let (vertex_buffer, vertex_buffer_future) = ImmutableBuffer::from_iter(
