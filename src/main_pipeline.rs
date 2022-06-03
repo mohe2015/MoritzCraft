@@ -15,7 +15,7 @@ use vulkano::{
         graphics::{
             depth_stencil::DepthStencilState,
             input_assembly::InputAssemblyState,
-            rasterization::{CullMode, RasterizationState, FrontFace},
+            rasterization::{CullMode, FrontFace, RasterizationState},
             vertex_input::BuffersDefinition,
             viewport::{Viewport, ViewportState},
         },
@@ -54,6 +54,13 @@ pub struct MainPipeline {
     surface: Arc<Surface<Window>>,
     rotation_start: Instant,
     queue: Arc<Queue>,
+
+    pub world_position: Matrix4<f32>,
+
+    pub pan_up: bool,
+    pub pan_left: bool,
+    pub pan_down: bool,
+    pub pan_right: bool,
 }
 
 impl MainPipeline {
@@ -463,6 +470,11 @@ impl MainPipeline {
             surface,
             swapchain,
             queue,
+            pan_down: false,
+            pan_left: false,
+            pan_right: false,
+            pan_up: false,
+            world_position: Matrix4::from_scale(1.0),
         }
     }
 
@@ -510,10 +522,25 @@ impl MainPipeline {
 
         // this part here is pipeline-specific
         let uniform_buffer_subbuffer = {
-            let elapsed = self.rotation_start.elapsed();
-            let rotation =
-                elapsed.as_secs() as f64 + elapsed.subsec_nanos() as f64 / 1_000_000_000.0;
-            let rotation = Matrix4::from_angle_y(Rad(rotation as f32));
+            /*  let elapsed = self.rotation_start.elapsed();
+                        let rotation =
+                            elapsed.as_secs() as f64 + elapsed.subsec_nanos() as f64 / 1_000_000_000.0;
+                        let rotation_mat = Matrix4::from_angle_y(Rad(rotation as f32));
+                        let rotation_mat2 = Matrix4::from_angle_x(Rad((rotation/10f64) as f32));
+
+            */
+            if self.pan_left {
+                self.world_position = self.world_position * Matrix4::from_angle_y(Rad(0.1));
+            }
+            if self.pan_right {
+                self.world_position = self.world_position * Matrix4::from_angle_y(Rad(-0.1));
+            }
+            if self.pan_up {
+                self.world_position = self.world_position * Matrix4::from_angle_x(Rad(0.1));
+            }
+            if self.pan_down {
+                self.world_position = self.world_position * Matrix4::from_angle_x(Rad(-0.1));
+            }
 
             // note: this teapot was meant for OpenGL where the origin is at the lower left
             //       instead the origin is at the upper left in Vulkan, so we reverse the Y axis
@@ -529,7 +556,7 @@ impl MainPipeline {
             let scale = Matrix4::from_scale(0.01);
 
             let uniform_data = vs::ty::Data {
-                world: rotation.into(),
+                world: self.world_position.into(),
                 view: (view * scale).into(),
                 proj: proj.into(),
             };

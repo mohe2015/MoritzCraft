@@ -7,10 +7,10 @@
 // notice may not be copied, modified, or distributed except
 // according to those terms.
 
-use crate::renderer::PoritzCraftRenderer;
+use crate::{renderer::PoritzCraftRenderer, utils::state_is_pressed};
 
 use winit::{
-    event::{Event, WindowEvent},
+    event::{Event, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
 };
 
@@ -26,64 +26,62 @@ impl PoritzCraftWindow {
 
         let mut renderer = PoritzCraftRenderer::new(&event_loop);
 
-        event_loop.run(move |event, _, control_flow| {
-            match event {
-                Event::WindowEvent {
-                    event: WindowEvent::CloseRequested,
-                    ..
-                } => {
-                    *control_flow = ControlFlow::Exit;
-                }
-                Event::WindowEvent {
-                    event: WindowEvent::Resized(_),
-                    ..
-                } => {
-                    renderer.main_pipeline.recreate_swapchain = true;
-                }
-                Event::WindowEvent {
-                    event: WindowEvent::KeyboardInput { input, .. },
-                    ..
-                } => {
-                    if let Some(_key_code) = input.virtual_keycode {
-                        /*
-                        match key_code {
-                            VirtualKeyCode::Escape => self.should_quit = state_is_pressed(input.state),
-                            VirtualKeyCode::W => self.pan_up = state_is_pressed(input.state),
-                            VirtualKeyCode::A => self.pan_left = state_is_pressed(input.state),
-                            VirtualKeyCode::S => self.pan_down = state_is_pressed(input.state),
-                            VirtualKeyCode::D => self.pan_right = state_is_pressed(input.state),
-                            VirtualKeyCode::F => self.toggle_full_screen = state_is_pressed(input.state),
-                            VirtualKeyCode::Return => self.randomize_palette = state_is_pressed(input.state),
-                            VirtualKeyCode::Equals => self.increase_iterations = state_is_pressed(input.state),
-                            VirtualKeyCode::Minus => self.decrease_iterations = state_is_pressed(input.state),
-                            VirtualKeyCode::Space => self.toggle_julia = state_is_pressed(input.state),
-                            _ => (),
+        event_loop.run(move |event, _, control_flow| match event {
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => {
+                *control_flow = ControlFlow::Exit;
+            }
+            Event::WindowEvent {
+                event: WindowEvent::Resized(_),
+                ..
+            } => {
+                renderer.main_pipeline.recreate_swapchain = true;
+            }
+            Event::WindowEvent {
+                event: WindowEvent::KeyboardInput { input, .. },
+                ..
+            } => {
+                if let Some(key_code) = input.virtual_keycode {
+                    match key_code {
+                        VirtualKeyCode::W => {
+                            renderer.main_pipeline.pan_up = state_is_pressed(input.state)
                         }
-                        */
+                        VirtualKeyCode::A => {
+                            renderer.main_pipeline.pan_left = state_is_pressed(input.state)
+                        }
+                        VirtualKeyCode::S => {
+                            renderer.main_pipeline.pan_down = state_is_pressed(input.state)
+                        }
+                        VirtualKeyCode::D => {
+                            renderer.main_pipeline.pan_right = state_is_pressed(input.state)
+                        }
+                        _ => (),
                     }
                 }
-                Event::WindowEvent {
-                    event:
-                        WindowEvent::MouseInput {
-                            state: _,
-                            button: _,
-                            ..
-                        },
-                    ..
-                } => {}
-                Event::WindowEvent {
-                    event: WindowEvent::CursorMoved { position: _, .. },
-                    ..
-                } => {}
-                Event::WindowEvent {
-                    event: WindowEvent::MouseWheel { delta: _, .. },
-                    ..
-                } => {}
-                Event::RedrawEventsCleared => {
-                    renderer.main_pipeline.render();
-                }
-                _ => (),
             }
+            Event::WindowEvent {
+                event:
+                    WindowEvent::MouseInput {
+                        state: _,
+                        button: _,
+                        ..
+                    },
+                ..
+            } => {}
+            Event::WindowEvent {
+                event: WindowEvent::CursorMoved { position: _, .. },
+                ..
+            } => {}
+            Event::WindowEvent {
+                event: WindowEvent::MouseWheel { delta: _, .. },
+                ..
+            } => {}
+            Event::RedrawEventsCleared => {
+                renderer.main_pipeline.render();
+            }
+            _ => (),
         });
     }
 }
