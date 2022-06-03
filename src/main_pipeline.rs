@@ -115,189 +115,189 @@ impl MainPipeline {
         let vertices: Vec<(Vertex, Normal, TexCoord)> = vec![
             (
                 Vertex {
-                    position: [-SIZE, -SIZE, -SIZE],
+                    position: [SIZE, SIZE, -SIZE],
                 },
                 N_FRONT,
                 texs[0],
-            ),
-            (
-                Vertex {
-                    position: [-SIZE, SIZE, -SIZE],
-                },
-                N_FRONT,
-                texs[1],
-            ),
-            (
-                Vertex {
-                    position: [SIZE, SIZE, -SIZE],
-                },
-                N_FRONT,
-                texs[2],
-            ),
-            (
-                Vertex {
-                    position: [SIZE, SIZE, -SIZE],
-                },
-                N_FRONT,
-                texs[3],
             ),
             (
                 Vertex {
                     position: [SIZE, -SIZE, -SIZE],
                 },
                 N_FRONT,
-                texs[4],
+                texs[1],
             ),
             (
                 Vertex {
                     position: [-SIZE, -SIZE, -SIZE],
                 },
                 N_FRONT,
-                texs[5],
-            ),
-            (
-                Vertex {
-                    position: [SIZE, -SIZE, SIZE],
-                },
-                N_BACK,
-                texs[0],
-            ),
-            (
-                Vertex {
-                    position: [SIZE, SIZE, SIZE],
-                },
-                N_BACK,
-                texs[1],
-            ),
-            (
-                Vertex {
-                    position: [-SIZE, SIZE, SIZE],
-                },
-                N_BACK,
                 texs[2],
-            ),
-            (
-                Vertex {
-                    position: [-SIZE, SIZE, SIZE],
-                },
-                N_BACK,
-                texs[3],
-            ),
-            (
-                Vertex {
-                    position: [-SIZE, -SIZE, SIZE],
-                },
-                N_BACK,
-                texs[4],
-            ),
-            (
-                Vertex {
-                    position: [SIZE, -SIZE, SIZE],
-                },
-                N_BACK,
-                texs[5],
-            ),
-            (
-                Vertex {
-                    position: [SIZE, -SIZE, -SIZE],
-                },
-                N_RIGHT,
-                texs[0],
-            ),
-            (
-                Vertex {
-                    position: [SIZE, SIZE, -SIZE],
-                },
-                N_RIGHT,
-                texs[1],
-            ),
-            (
-                Vertex {
-                    position: [SIZE, SIZE, SIZE],
-                },
-                N_RIGHT,
-                texs[2],
-            ),
-            (
-                Vertex {
-                    position: [SIZE, SIZE, SIZE],
-                },
-                N_RIGHT,
-                texs[3],
-            ),
-            (
-                Vertex {
-                    position: [SIZE, -SIZE, SIZE],
-                },
-                N_RIGHT,
-                texs[4],
-            ),
-            (
-                Vertex {
-                    position: [SIZE, -SIZE, -SIZE],
-                },
-                N_RIGHT,
-                texs[5],
-            ),
-            (
-                Vertex {
-                    position: [-SIZE, -SIZE, SIZE],
-                },
-                N_LEFT,
-                texs[0],
-            ),
-            (
-                Vertex {
-                    position: [-SIZE, SIZE, SIZE],
-                },
-                N_LEFT,
-                texs[1],
-            ),
-            (
-                Vertex {
-                    position: [-SIZE, SIZE, -SIZE],
-                },
-                N_LEFT,
-                texs[2],
-            ),
-            (
-                Vertex {
-                    position: [-SIZE, SIZE, -SIZE],
-                },
-                N_LEFT,
-                texs[3],
             ),
             (
                 Vertex {
                     position: [-SIZE, -SIZE, -SIZE],
                 },
+                N_FRONT,
+                texs[3],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, SIZE, -SIZE],
+                },
+                N_FRONT,
+                texs[4],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, SIZE, -SIZE],
+                },
+                N_FRONT,
+                texs[5],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, SIZE, SIZE],
+                },
+                N_BACK,
+                texs[0],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, SIZE],
+                },
+                N_BACK,
+                texs[1],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, -SIZE, SIZE],
+                },
+                N_BACK,
+                texs[2],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, -SIZE, SIZE],
+                },
+                N_BACK,
+                texs[3],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, SIZE, SIZE],
+                },
+                N_BACK,
+                texs[4],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, SIZE, SIZE],
+                },
+                N_BACK,
+                texs[5],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, SIZE, -SIZE],
+                },
+                N_RIGHT,
+                texs[0],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, -SIZE],
+                },
+                N_RIGHT,
+                texs[1],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, SIZE],
+                },
+                N_RIGHT,
+                texs[2],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, SIZE],
+                },
+                N_RIGHT,
+                texs[3],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, SIZE, SIZE],
+                },
+                N_RIGHT,
+                texs[4],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, SIZE, -SIZE],
+                },
+                N_RIGHT,
+                texs[5],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, SIZE, SIZE],
+                },
+                N_LEFT,
+                texs[0],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, -SIZE, SIZE],
+                },
+                N_LEFT,
+                texs[1],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, -SIZE, -SIZE],
+                },
+                N_LEFT,
+                texs[2],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, -SIZE, -SIZE],
+                },
+                N_LEFT,
+                texs[3],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, SIZE, -SIZE],
+                },
                 N_LEFT,
                 texs[4],
             ),
             (
                 Vertex {
-                    position: [-SIZE, -SIZE, SIZE],
+                    position: [SIZE, SIZE, SIZE],
                 },
                 N_LEFT,
                 texs[5],
             ),
             (
                 Vertex {
-                    position: [-SIZE, -SIZE, SIZE],
+                    position: [SIZE, SIZE, SIZE],
                 },
                 N_TOP,
                 texs[0],
             ),
             (
                 Vertex {
-                    position: [-SIZE, -SIZE, -SIZE],
+                    position: [SIZE, SIZE, -SIZE],
                 },
                 N_TOP,
                 texs[1],
             ),
             (
                 Vertex {
-                    position: [SIZE, -SIZE, -SIZE],
+                    position: [-SIZE, SIZE, -SIZE],
                 },
                 N_TOP,
                 texs[2],
@@ -666,7 +666,7 @@ fn window_size_dependent_setup(
         .depth_stencil_state(DepthStencilState::simple_depth_test())
         .render_pass(Subpass::from(render_pass, 0).unwrap())
         .rasterization_state(RasterizationState {
-            cull_mode: StateMode::Fixed(CullMode::Back),
+            cull_mode: StateMode::Fixed(CullMode::Front),
             front_face: StateMode::Fixed(FrontFace::CounterClockwise),
             ..Default::default()
         })
