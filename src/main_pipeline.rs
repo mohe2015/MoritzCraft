@@ -2,7 +2,7 @@ use std::{io::Cursor, sync::Arc, time::Instant};
 
 use cgmath::{Matrix4, Point3, Rad, Vector3};
 use vulkano::{
-    buffer::{BufferUsage, CpuBufferPool, TypedBufferAccess, ImmutableBuffer},
+    buffer::{BufferUsage, CpuBufferPool, ImmutableBuffer, TypedBufferAccess},
     command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents},
     descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet},
     device::{Device, Queue},
@@ -14,9 +14,10 @@ use vulkano::{
     pipeline::{
         graphics::{
             depth_stencil::DepthStencilState,
-            input_assembly::{InputAssemblyState},
+            input_assembly::InputAssemblyState,
+            rasterization::{CullMode, RasterizationState},
             vertex_input::BuffersDefinition,
-            viewport::{Viewport, ViewportState}, rasterization::{RasterizationState, CullMode},
+            viewport::{Viewport, ViewportState},
         },
         GraphicsPipeline, Pipeline, PipelineBindPoint, StateMode,
     },
@@ -37,7 +38,6 @@ pub struct MainPipeline {
     vertex_buffer: Arc<ImmutableBuffer<[Vertex]>>,
     normals_buffer: Arc<ImmutableBuffer<[Normal]>>,
     texture_coordinate_buffer: Arc<ImmutableBuffer<[TexCoord]>>,
-    index_buffer: Arc<ImmutableBuffer<[u16]>>,
     instance_buffer: Arc<ImmutableBuffer<[InstanceData]>>,
     pipeline: Arc<GraphicsPipeline>,
     device: Arc<Device>,
@@ -64,39 +64,6 @@ impl MainPipeline {
         queue: Arc<Queue>,
         images: Vec<Arc<SwapchainImage<Window>>>,
     ) -> Self {
-        // every vertex is duplicated three times for the three normal directions
-        let vertices: Vec<Vertex> = repeat_element(
-            [
-                Vertex {
-                    position: [-SIZE, -SIZE, -SIZE],
-                },
-                Vertex {
-                    position: [SIZE, -SIZE, -SIZE],
-                },
-                Vertex {
-                    position: [SIZE, SIZE, -SIZE],
-                },
-                Vertex {
-                    position: [-SIZE, SIZE, -SIZE],
-                },
-                Vertex {
-                    position: [-SIZE, -SIZE, SIZE],
-                },
-                Vertex {
-                    position: [SIZE, -SIZE, SIZE],
-                },
-                Vertex {
-                    position: [SIZE, SIZE, SIZE],
-                },
-                Vertex {
-                    position: [-SIZE, SIZE, SIZE],
-                },
-            ]
-            .into_iter(),
-            3,
-        )
-        .collect();
-
         const N_TOP: Normal = Normal {
             normal: [0.0, -SIZE, 0.0],
         };
@@ -123,150 +90,37 @@ impl MainPipeline {
             N_BOTTOM, N_BACK,
         ];
 
-        // TODO FIXME this is wrong because every vertex occurs three times
-        let texture_coordinates: Vec<TexCoord> = vec![
-            // top left of front face
-            TexCoord {
-                tex_coord: [1.0, 0.0],
+        let vertices: Vec<(Vertex, Normal, TexCoord)> = vec![(
+            Vertex {
+                position: [-SIZE, -SIZE, -SIZE],
+            },
+            Normal {
+                normal: [0.0, 0.0, 0.0],
             },
             TexCoord {
                 tex_coord: [0.0, 0.0],
             },
-            TexCoord {
-                tex_coord: [0.0, 0.0],
-            },
-            // top right of front face
-            TexCoord {
-                tex_coord: [0.0, 0.0],
-            },
-            TexCoord {
-                tex_coord: [0.0, 0.0],
-            },
-            TexCoord {
-                tex_coord: [1.0, 0.0],
-            },
-            // bottom right of front face
-            TexCoord {
-                tex_coord: [0.0, 1.0],
-            },
-            TexCoord {
-                tex_coord: [1.0, 0.0],
-            },
-            TexCoord {
-                tex_coord: [1.0, 1.0],
-            },
-            // bottom left of front face
-            TexCoord {
-                tex_coord: [1.0, 1.0],
-            },
-            TexCoord {
-                tex_coord: [0.0, 0.0],
-            },
-            TexCoord {
-                tex_coord: [0.0, 1.0],
-            },
-            // leftright, topbottom, frontback
-            // top left (looking from front) so top right of back face
-            TexCoord {
-                tex_coord: [0.0, 0.0],
-            },
-            TexCoord {
-                tex_coord: [0.0, 0.0],
-            },
-            TexCoord {
-                tex_coord: [1.0, 0.0],
-            },
-            // top right (looking from front) so top left of back face
-            TexCoord {
-                tex_coord: [1.0, 0.0],
-            },
-            TexCoord {
-                tex_coord: [0.0, 0.0],
-            },
-            TexCoord {
-                tex_coord: [0.0, 0.0],
-            },
-            // bottom right (looking from front) so bottom left of back face
-            TexCoord {
-                tex_coord: [1.0, 1.0],
-            },
-            TexCoord {
-                tex_coord: [0.0, 0.0],
-            },
-            TexCoord {
-                tex_coord: [0.0, 1.0],
-            },
-            // bottom left (looking from front) so bottom right of back face
-            TexCoord {
-                tex_coord: [0.0, 1.0],
-            },
-            TexCoord {
-                tex_coord: [1.0, 0.0],
-            },
-            TexCoord {
-                tex_coord: [1.0, 1.0],
-            },
-        ];
+        )];
 
-        let indices: Vec<u16> = vec![
-            2,
-            3 + 2,
-            2 * 3 + 2,
-            2 * 3 + 2,
-            3 * 3 + 2,
-            2, // front
-            /* 4 * 3 + 2,
-            5 * 3 + 2,
-            6 * 3 + 2,
-            6 * 3 + 2,
-            7 * 3 + 2,
-            4 * 3 + 2, // back*/
-            0,
-            3 * 3,
-            7 * 3,
-            0,
-            4 * 3,
-            7 * 3, // left
-            /* 3,
-            2 * 3,
-            5 * 3,
-            2 * 3,
-            5 * 3,
-            6 * 3, // right*/
-            1,
-            3 + 1,
-            4 * 3 + 1,
-            3 + 1,
-            4 * 3 + 1,
-            5 * 3 + 1, // top
-                       /*2 * 3 + 1,
-                       6 * 3 + 1,
-                       7 * 3 + 1,
-                       2 * 3 + 1,
-                       3 * 3 + 1,
-                       7 * 3 + 1, // bottom*/
-        ];
-
-        // The start of this example is exactly the same as `triangle`. You should read the
-        // `triangle` example if you haven't done so yet.
-
-        let (vertex_buffer, vertex_buffer_future) =
-            ImmutableBuffer::from_iter(vertices, BufferUsage::all(), queue.clone())
-                .unwrap();
-        let (normals_buffer, normals_buffer_future) =
-            ImmutableBuffer::from_iter(normals, BufferUsage::all(), queue.clone())
-                .unwrap();
-        let (texture_coordinate_buffer, texture_coordinate_buffer_future) = ImmutableBuffer::from_iter(
-            texture_coordinates,
+        let (vertex_buffer, vertex_buffer_future) = ImmutableBuffer::from_iter(
+            vertices.iter().map(|e| e.0),
             BufferUsage::all(),
-            queue.clone()
+            queue.clone(),
         )
         .unwrap();
-
-        let (index_buffer, index_buffer_future) =
-        ImmutableBuffer::from_iter(indices, BufferUsage::all(), queue.clone())
-                .unwrap();
-
+        let (normals_buffer, normals_buffer_future) = ImmutableBuffer::from_iter(
+            vertices.iter().map(|e| e.1),
+            BufferUsage::all(),
+            queue.clone(),
+        )
+        .unwrap();
+        let (texture_coordinate_buffer, texture_coordinate_buffer_future) =
+            ImmutableBuffer::from_iter(
+                vertices.iter().map(|e| e.2),
+                BufferUsage::all(),
+                queue.clone(),
+            )
+            .unwrap();
 
         // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
 
@@ -286,8 +140,7 @@ impl MainPipeline {
             data
         };
         let (instance_buffer, instance_buffer_future) =
-        ImmutableBuffer::from_iter(instances, BufferUsage::all(), queue.clone())
-                .unwrap();
+            ImmutableBuffer::from_iter(instances, BufferUsage::all(), queue.clone()).unwrap();
 
         let uniform_buffer = CpuBufferPool::<vs::ty::Data>::new(device.clone(), BufferUsage::all());
 
@@ -361,7 +214,6 @@ impl MainPipeline {
         let rotation_start = Instant::now();
 
         Self {
-            index_buffer,
             normals_buffer,
             texture_coordinate_buffer,
             vertex_buffer,
@@ -375,7 +227,14 @@ impl MainPipeline {
             vs,
             render_pass,
             device,
-            previous_frame_end: Some(tex_future.join(vertex_buffer_future).join(normals_buffer_future).join(texture_coordinate_buffer_future).join(index_buffer_future).join(instance_buffer_future).boxed()),
+            previous_frame_end: Some(
+                tex_future
+                    .join(vertex_buffer_future)
+                    .join(normals_buffer_future)
+                    .join(texture_coordinate_buffer_future)
+                    .join(instance_buffer_future)
+                    .boxed(),
+            ),
             recreate_swapchain: false,
             rotation_start,
             surface,
@@ -509,11 +368,9 @@ impl MainPipeline {
                     self.instance_buffer.clone(),
                 ),
             )
-            .bind_index_buffer(self.index_buffer.clone())
-            .draw_indexed(
-                self.index_buffer.len() as u32,
+            .draw(
+                self.vertex_buffer.len() as u32,
                 self.instance_buffer.len() as u32,
-                0,
                 0,
                 0,
             )
@@ -624,7 +481,7 @@ mod vs {
             use bytemuck::{Pod, Zeroable};
 
             #[derive(Clone, Copy, Zeroable, Pod)]
-     
+
         },
     }
 }

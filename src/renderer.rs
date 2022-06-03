@@ -7,25 +7,20 @@
 // notice may not be copied, modified, or distributed except
 // according to those terms.
 
-
 use crate::main_pipeline::MainPipeline;
-
-
 
 use vulkano::device::physical::{PhysicalDevice, PhysicalDeviceType};
 use vulkano::device::{DeviceCreateInfo, DeviceExtensions, QueueCreateInfo};
-use vulkano::image::{ImageUsage};
+use vulkano::image::ImageUsage;
 use vulkano::instance::{Instance, InstanceCreateInfo};
 
 use vulkano::{
-    device::{Device},
-    swapchain::{
-        Swapchain, SwapchainCreateInfo,
-    },
+    device::Device,
+    swapchain::{Swapchain, SwapchainCreateInfo},
 };
 
 use winit::event_loop::EventLoop;
-use winit::window::{WindowBuilder};
+use winit::window::WindowBuilder;
 
 pub struct PoritzCraftRenderer {
     pub main_pipeline: MainPipeline,
@@ -121,13 +116,7 @@ impl PoritzCraftRenderer {
         // TODO to render a cube we only need the three visible faces
 
         Self {
-            main_pipeline: MainPipeline::new(
-                device,
-                swapchain,
-                surface,
-                queue,
-                images,
-            ),
+            main_pipeline: MainPipeline::new(device, swapchain, surface, queue, images),
         }
     }
 }
