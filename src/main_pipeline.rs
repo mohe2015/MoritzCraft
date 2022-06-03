@@ -64,6 +64,8 @@ impl MainPipeline {
         queue: Arc<Queue>,
         images: Vec<Arc<SwapchainImage<Window>>>,
     ) -> Self {
+        // these coords are stupid because they don't match screen
+
         // x right
         // y up
         // z back
@@ -278,6 +280,27 @@ impl MainPipeline {
                 },
                 N_LEFT,
                 texs[5],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, SIZE],
+                },
+                N_TOP,
+                texs[0],
+            ),
+            (
+                Vertex {
+                    position: [-SIZE, -SIZE, -SIZE],
+                },
+                N_TOP,
+                texs[1],
+            ),
+            (
+                Vertex {
+                    position: [SIZE, -SIZE, -SIZE],
+                },
+                N_TOP,
+                texs[2],
             ),
         ];
 
@@ -643,7 +666,7 @@ fn window_size_dependent_setup(
         .depth_stencil_state(DepthStencilState::simple_depth_test())
         .render_pass(Subpass::from(render_pass, 0).unwrap())
         .rasterization_state(RasterizationState {
-            cull_mode: StateMode::Fixed(CullMode::Front),
+            cull_mode: StateMode::Fixed(CullMode::Back),
             front_face: StateMode::Fixed(FrontFace::CounterClockwise),
             ..Default::default()
         })
