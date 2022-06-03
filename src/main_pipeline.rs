@@ -64,6 +64,12 @@ impl MainPipeline {
         queue: Arc<Queue>,
         images: Vec<Arc<SwapchainImage<Window>>>,
     ) -> Self {
+        // x right
+        // y up
+        // z back
+
+        // counter clockwise around the whole face
+
         const N_TOP: Normal = Normal {
             normal: [0.0, -SIZE, 0.0],
         };
@@ -94,9 +100,23 @@ impl MainPipeline {
             Vertex {
                 position: [-SIZE, -SIZE, -SIZE],
             },
-            Normal {
-                normal: [0.0, 0.0, 0.0],
+            N_FRONT,
+            TexCoord {
+                tex_coord: [0.0, 0.0],
             },
+        ), (
+            Vertex {
+                position: [-SIZE, SIZE, -SIZE],
+            },
+            N_FRONT,
+            TexCoord {
+                tex_coord: [0.0, 0.0],
+            },
+        ), (
+            Vertex {
+                position: [SIZE, SIZE, -SIZE],
+            },
+            N_FRONT,
             TexCoord {
                 tex_coord: [0.0, 0.0],
             },
