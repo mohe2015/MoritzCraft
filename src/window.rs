@@ -60,6 +60,18 @@ impl PoritzCraftWindow {
                         VirtualKeyCode::D => {
                             renderer.main_pipeline.pan_right = state_is_pressed(input.state)
                         }
+                        VirtualKeyCode::Left => {
+                            renderer.main_pipeline.rotate_left = state_is_pressed(input.state)
+                        }
+                        VirtualKeyCode::Right => {
+                            renderer.main_pipeline.rotate_right = state_is_pressed(input.state)
+                        }
+                        VirtualKeyCode::Up => {
+                            renderer.main_pipeline.rotate_up = state_is_pressed(input.state)
+                        }
+                        VirtualKeyCode::Down => {
+                            renderer.main_pipeline.rotate_down = state_is_pressed(input.state)
+                        }
                         _ => (),
                     }
                 }

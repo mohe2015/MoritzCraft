@@ -61,6 +61,12 @@ pub struct MainPipeline {
     pub pan_left: bool,
     pub pan_down: bool,
     pub pan_right: bool,
+
+    pub rotate_up: bool,
+    pub rotate_left: bool,
+    pub rotate_down: bool,
+    pub rotate_right: bool,
+
     pub control: bool,
 }
 
@@ -517,6 +523,10 @@ impl MainPipeline {
             pan_left: false,
             pan_right: false,
             pan_up: false,
+            rotate_down: false,
+            rotate_left: false,
+            rotate_right: false,
+            rotate_up: false,
             control: false,
             world_position: Matrix4::new_scaling(1.0),
         }
@@ -573,31 +583,29 @@ impl MainPipeline {
                         let rotation_mat2 = Matrix4::from_angle_x(Rad((rotation/10f64) as f32));
 
             */
-            if !self.control && self.pan_left {
-                
-
-                self.world_position = self.world_position * Matrix4::new_rotation(Vector3::new(0.0, 0.1,0.0));
+            if self.rotate_left {
+                self.world_position = Matrix4::new_rotation(Vector3::new(0.0, 0.02,0.0)) * self.world_position;
             }
-            if !self.control && self.pan_right {
-                self.world_position = self.world_position * Matrix4::new_rotation(Vector3::new(0.0, -0.1, 0.0));
+            if self.rotate_right {
+                self.world_position = Matrix4::new_rotation(Vector3::new(0.0, -0.02, 0.0)) * self.world_position;
             }
-            if !self.control && self.pan_up {
-                self.world_position = self.world_position * Matrix4::new_rotation(Vector3::new(0.1, 0.0, 0.0));
+            if self.rotate_up {
+                self.world_position = Matrix4::new_rotation(Vector3::new(0.02, 0.0, 0.0)) * self.world_position;
             }
-            if !self.control && self.pan_down {
-                self.world_position = self.world_position * Matrix4::new_rotation(Vector3::new(-0.1, 0.0, 0.0));
+            if self.rotate_down {
+                self.world_position = Matrix4::new_rotation(Vector3::new(-0.02, 0.0, 0.0)) * self.world_position;
             }
-            if self.control && self.pan_up {
-                self.world_position = self.world_position * Matrix4::new_translation(&Vector3::new(2.0,0.0,0.0));
+            if self.pan_up {
+                self.world_position = Matrix4::new_translation(&Vector3::new(0.0,0.0,2.0)) * self.world_position;
             }
-            if self.control && self.pan_down {
-                self.world_position = self.world_position * Matrix4::new_translation(&Vector3::new(-2.0,0.0,0.0));
+            if self.pan_down {
+                self.world_position = Matrix4::new_translation(&Vector3::new(0.0,0.0,-2.0))* self.world_position;
             }
-            if self.control && self.pan_left {
-                self.world_position = self.world_position * Matrix4::new_translation(&Vector3::new(0.0,0.0,2.0));
+            if self.pan_left {
+                self.world_position = Matrix4::new_translation(&Vector3::new(-2.0,0.0,0.0)) * self.world_position;
             }
-            if self.control && self.pan_right {
-                self.world_position = self.world_position * Matrix4::new_translation(&Vector3::new(0.0,0.0,-2.0));
+            if self.pan_right {
+                self.world_position = Matrix4::new_translation(&Vector3::new(2.0,0.0,0.0)) * self.world_position;
             }
 
             // note: this teapot was meant for OpenGL where the origin is at the lower left
