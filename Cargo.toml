@@ -12,5 +12,5 @@ vulkano-win = "0.29"
 # https://github.com/rust-windowing/winit/pull/2263
 winit = { git = "https://github.com/rust-windowing/winit" }
 bytemuck = "1"
-cgmath = "0.18"
 png = "0.17"
+nalgebra = "0.31"

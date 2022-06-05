@@ -1,6 +1,6 @@
 use std::{io::Cursor, sync::Arc, time::Instant};
 
-use cgmath::{Matrix4, Point3, Rad, Vector3};
+use nalgebra::{Matrix4, Point3, Vector3};
 use vulkano::{
     buffer::{BufferUsage, CpuBufferPool, ImmutableBuffer, TypedBufferAccess},
     command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents},
@@ -518,7 +518,7 @@ impl MainPipeline {
             pan_right: false,
             pan_up: false,
             control: false,
-            world_position: Matrix4::from_scale(1.0),
+            world_position: Matrix4::new_scaling(1.0),
         }
     }
 
@@ -574,28 +574,30 @@ impl MainPipeline {
 
             */
             if !self.control && self.pan_left {
-                self.world_position = self.world_position * Matrix4::from_angle_y(Rad(0.1));
+                
+
+                self.world_position = self.world_position * Matrix4::new_rotation(Vector3::new(0.0, 0.1,0.0));
             }
             if !self.control && self.pan_right {
-                self.world_position = self.world_position * Matrix4::from_angle_y(Rad(-0.1));
+                self.world_position = self.world_position * Matrix4::new_rotation(Vector3::new(0.0, -0.1, 0.0));
             }
             if !self.control && self.pan_up {
-                self.world_position = self.world_position * Matrix4::from_angle_x(Rad(0.1));
+                self.world_position = self.world_position * Matrix4::new_rotation(Vector3::new(0.1, 0.0, 0.0));
             }
             if !self.control && self.pan_down {
-                self.world_position = self.world_position * Matrix4::from_angle_x(Rad(-0.1));
+                self.world_position = self.world_position * Matrix4::new_rotation(Vector3::new(-0.1, 0.0, 0.0));
             }
             if self.control && self.pan_up {
-                self.world_position = self.world_position * Matrix4::from_translation(Vector3::new(2.0,0.0,0.0));
+                self.world_position = self.world_position * Matrix4::new_translation(&Vector3::new(2.0,0.0,0.0));
             }
             if self.control && self.pan_down {
-                self.world_position = self.world_position * Matrix4::from_translation(Vector3::new(-2.0,0.0,0.0));
+                self.world_position = self.world_position * Matrix4::new_translation(&Vector3::new(-2.0,0.0,0.0));
             }
             if self.control && self.pan_left {
-                self.world_position = self.world_position * Matrix4::from_translation(Vector3::new(0.0,0.0,2.0));
+                self.world_position = self.world_position * Matrix4::new_translation(&Vector3::new(0.0,0.0,2.0));
             }
             if self.control && self.pan_right {
-                self.world_position = self.world_position * Matrix4::from_translation(Vector3::new(0.0,0.0,-2.0));
+                self.world_position = self.world_position * Matrix4::new_translation(&Vector3::new(0.0,0.0,-2.0));
             }
 
             // note: this teapot was meant for OpenGL where the origin is at the lower left
@@ -603,13 +605,13 @@ impl MainPipeline {
             let aspect_ratio =
                 self.swapchain.image_extent()[0] as f32 / self.swapchain.image_extent()[1] as f32;
             let proj =
-                cgmath::perspective(Rad(std::f32::consts::FRAC_PI_2), aspect_ratio, 0.01, 100.0);
+                Matrix4::new_perspective(aspect_ratio, std::f32::consts::FRAC_PI_2, 0.01, 100.0);
             let view = Matrix4::look_at_rh(
-                Point3::new(0.3, 0.3, 1.0),
-                Point3::new(0.0, 0.0, 0.0),
-                Vector3::new(0.0, -1.0, 0.0),
+                &Point3::new(0.3, 0.3, 1.0),
+                &Point3::new(0.0, 0.0, 0.0),
+                &Vector3::new(0.0, -1.0, 0.0),
             );
-            let scale = Matrix4::from_scale(0.01);
+            let scale = Matrix4::new_scaling(0.01);
 
             let uniform_data = vs::ty::Data {
                 world: self.world_position.into(),
