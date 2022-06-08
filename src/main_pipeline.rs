@@ -628,7 +628,6 @@ impl MainPipeline {
                 &Vector3::new(0.0, -1.0, 0.0),
             );*/
             let view = self.view_matrix;
-            let scale = Matrix4::new_scaling(0.01);
 
             let uniform_data = vs::ty::Data {
                 world: Matrix4::identity().into(), //self.view_matrix.into(),
