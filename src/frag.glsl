@@ -10,7 +10,7 @@ layout(set = 1, binding = 0) uniform sampler2D tex;
 const vec3 LIGHT = vec3(0.0, 0.0, 1.0);
 
 void main() {
-    float brightness = clamp(dot(normalize(v_normal), normalize(LIGHT)), 0.5, 1);
+    float brightness = clamp(dot(normalize(v_normal), normalize(LIGHT)), 0.6, 1);
   
     vec4 texture_color = texture(tex, tex_coords);
     f_color = texture_color * brightness;
