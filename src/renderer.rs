@@ -113,7 +113,6 @@ impl PoritzCraftRenderer {
             )
             .unwrap()
         };
-        // TODO to render a cube we only need the three visible faces
 
         Self {
             main_pipeline: MainPipeline::new(device, swapchain, surface, queue, images),

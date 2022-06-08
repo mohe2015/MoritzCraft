@@ -79,13 +79,13 @@ impl MainPipeline {
         queue: Arc<Queue>,
         images: Vec<Arc<SwapchainImage<Window>>>,
     ) -> Self {
-        // these coords are stupid because they don't match screen
-
+                // https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
         // x right
-        // y up?
+        // y down
         // z back
 
-        // counter clockwise around the whole face
+
+        // counter clockwise around the whole face (for back-face culling)
 
         const N_TOP: Normal = Normal {
             normal: [0.0, -SIZE, 0.0],
