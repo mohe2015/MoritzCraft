@@ -56,7 +56,7 @@ pub struct MainPipeline {
     rotation_start: Instant,
     queue: Arc<Queue>,
 
-    pub world_position: Matrix4<f32>,
+    pub view_matrix: Matrix4<f32>,
 
     pub pan_up: bool,
     pub pan_left: bool,
@@ -533,7 +533,7 @@ impl MainPipeline {
             rotate_right: false,
             rotate_up: false,
             control: false,
-            world_position: Matrix4::new_scaling(1.0),
+            view_matrix: Matrix4::new_translation(&Vector3::new(-250.0, -250.0, -250.0)),
         }
     }
 
@@ -582,58 +582,56 @@ impl MainPipeline {
         // this part here is pipeline-specific
         let uniform_buffer_subbuffer = {
             if self.rotate_left {
-                self.world_position =
-                    Matrix4::new_rotation(Vector3::new(0.0, 0.02, 0.0)) * self.world_position;
+                self.view_matrix =
+                    Matrix4::new_rotation(Vector3::new(0.0, 0.02, 0.0)) * self.view_matrix;
             }
             if self.rotate_right {
-                self.world_position =
-                    Matrix4::new_rotation(Vector3::new(0.0, -0.02, 0.0)) * self.world_position;
+                self.view_matrix =
+                    Matrix4::new_rotation(Vector3::new(0.0, -0.02, 0.0)) * self.view_matrix;
             }
             if self.rotate_up {
-                self.world_position =
-                    Matrix4::new_rotation(Vector3::new(0.02, 0.0, 0.0)) * self.world_position;
+                self.view_matrix =
+                    Matrix4::new_rotation(Vector3::new(0.02, 0.0, 0.0)) * self.view_matrix;
             }
             if self.rotate_down {
-                self.world_position =
-                    Matrix4::new_rotation(Vector3::new(-0.02, 0.0, 0.0)) * self.world_position;
+                self.view_matrix =
+                    Matrix4::new_rotation(Vector3::new(-0.02, 0.0, 0.0)) * self.view_matrix;
             }
             if self.pan_up {
-                self.world_position =
-                    Matrix4::new_translation(&Vector3::new(0.0, 0.0, 20.0)) * self.world_position;
+                self.view_matrix =
+                    Matrix4::new_translation(&Vector3::new(0.0, 0.0, 20.0)) * self.view_matrix;
             }
             if self.pan_down {
-                self.world_position =
-                    Matrix4::new_translation(&Vector3::new(0.0, 0.0, -20.0)) * self.world_position;
+                self.view_matrix =
+                    Matrix4::new_translation(&Vector3::new(0.0, 0.0, -20.0)) * self.view_matrix;
             }
             if self.pan_left {
-                self.world_position =
-                    Matrix4::new_translation(&Vector3::new(-20.0, 0.0, 0.0)) * self.world_position;
+                self.view_matrix =
+                    Matrix4::new_translation(&Vector3::new(-20.0, 0.0, 0.0)) * self.view_matrix;
             }
             if self.pan_right {
-                self.world_position =
-                    Matrix4::new_translation(&Vector3::new(20.0, 0.0, 0.0)) * self.world_position;
+                self.view_matrix =
+                    Matrix4::new_translation(&Vector3::new(20.0, 0.0, 0.0)) * self.view_matrix;
             }
 
-            // note: this teapot was meant for OpenGL where the origin is at the lower left
-            //       instead the origin is at the upper left in Vulkan, so we reverse the Y axis
             let aspect_ratio =
                 self.swapchain.image_extent()[0] as f32 / self.swapchain.image_extent()[1] as f32;
             let proj = Matrix4::new_perspective(
                 aspect_ratio,
-                std::f32::consts::FRAC_PI_2,
-                0.01,
-                100000000.0,
+                70.0 * std::f32::consts::PI / 180.0, // this value is exciting
+                0.1,
+                10000.0,
             );
             /*let view = Matrix4::look_at_rh(
                 &Point3::new(0.3, 0.3, 1.0),
                 &Point3::new(0.0, 0.0, 0.0),
                 &Vector3::new(0.0, -1.0, 0.0),
             );*/
-            let view = self.world_position;
+            let view = self.view_matrix;
             let scale = Matrix4::new_scaling(0.01);
 
             let uniform_data = vs::ty::Data {
-                world: Matrix4::identity().into(), //self.world_position.into(),
+                world: Matrix4::identity().into(), //self.view_matrix.into(),
                 view: (view).into(),
                 proj: proj.into(),
             };
