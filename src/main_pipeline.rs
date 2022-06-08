@@ -414,7 +414,11 @@ impl MainPipeline {
                 for y in 0..1 {
                     for z in 0..1000 {
                         data.push(InstanceData {
-                            position_offset: [rng.gen_range(0..1000) as f32 * 20.0, rng.gen_range(0..100) as f32 * 20.0, rng.gen_range(0..1000) as f32 * 20.0],
+                            position_offset: [
+                                rng.gen_range(0..1000) as f32 * 20.0,
+                                rng.gen_range(0..100) as f32 * 20.0,
+                                rng.gen_range(0..1000) as f32 * 20.0,
+                            ],
                         });
                     }
                 }
@@ -587,36 +591,48 @@ impl MainPipeline {
 
             */
             if self.rotate_left {
-                self.world_position = Matrix4::new_rotation(Vector3::new(0.0, 0.02,0.0)) * self.world_position;
+                self.world_position =
+                    Matrix4::new_rotation(Vector3::new(0.0, 0.02, 0.0)) * self.world_position;
             }
             if self.rotate_right {
-                self.world_position = Matrix4::new_rotation(Vector3::new(0.0, -0.02, 0.0)) * self.world_position;
+                self.world_position =
+                    Matrix4::new_rotation(Vector3::new(0.0, -0.02, 0.0)) * self.world_position;
             }
             if self.rotate_up {
-                self.world_position = Matrix4::new_rotation(Vector3::new(0.02, 0.0, 0.0)) * self.world_position;
+                self.world_position =
+                    Matrix4::new_rotation(Vector3::new(0.02, 0.0, 0.0)) * self.world_position;
             }
             if self.rotate_down {
-                self.world_position = Matrix4::new_rotation(Vector3::new(-0.02, 0.0, 0.0)) * self.world_position;
+                self.world_position =
+                    Matrix4::new_rotation(Vector3::new(-0.02, 0.0, 0.0)) * self.world_position;
             }
             if self.pan_up {
-                self.world_position = Matrix4::new_translation(&Vector3::new(0.0,0.0,20.0)) * self.world_position;
+                self.world_position =
+                    Matrix4::new_translation(&Vector3::new(0.0, 0.0, 20.0)) * self.world_position;
             }
             if self.pan_down {
-                self.world_position = Matrix4::new_translation(&Vector3::new(0.0,0.0,-20.0))* self.world_position;
+                self.world_position =
+                    Matrix4::new_translation(&Vector3::new(0.0, 0.0, -20.0)) * self.world_position;
             }
             if self.pan_left {
-                self.world_position = Matrix4::new_translation(&Vector3::new(-20.0,0.0,0.0)) * self.world_position;
+                self.world_position =
+                    Matrix4::new_translation(&Vector3::new(-20.0, 0.0, 0.0)) * self.world_position;
             }
             if self.pan_right {
-                self.world_position = Matrix4::new_translation(&Vector3::new(20.0,0.0,0.0)) * self.world_position;
+                self.world_position =
+                    Matrix4::new_translation(&Vector3::new(20.0, 0.0, 0.0)) * self.world_position;
             }
 
             // note: this teapot was meant for OpenGL where the origin is at the lower left
             //       instead the origin is at the upper left in Vulkan, so we reverse the Y axis
             let aspect_ratio =
                 self.swapchain.image_extent()[0] as f32 / self.swapchain.image_extent()[1] as f32;
-            let proj =
-                Matrix4::new_perspective(aspect_ratio, std::f32::consts::FRAC_PI_2, 0.01, 100000000.0);
+            let proj = Matrix4::new_perspective(
+                aspect_ratio,
+                std::f32::consts::FRAC_PI_2,
+                0.01,
+                100000000.0,
+            );
             /*let view = Matrix4::look_at_rh(
                 &Point3::new(0.3, 0.3, 1.0),
                 &Point3::new(0.0, 0.0, 0.0),
@@ -626,7 +642,7 @@ impl MainPipeline {
             let scale = Matrix4::new_scaling(0.01);
 
             let uniform_data = vs::ty::Data {
-                world: Matrix4::identity().into(),//self.world_position.into(),
+                world: Matrix4::identity().into(), //self.world_position.into(),
                 view: (view).into(),
                 proj: proj.into(),
             };
