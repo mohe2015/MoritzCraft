@@ -19,7 +19,7 @@ layout(set = 0, binding = 0) uniform Data {
 
 void main() {
     mat4 worldview = uniforms.view * uniforms.world;
-    v_normal = mat3(worldview) * normal;
+    v_normal = mat3(uniforms.world) * normal;
     gl_Position = uniforms.proj * worldview * vec4(position + position_offset, 1.0);
     v_tex_coord = tex_coord;
 }
