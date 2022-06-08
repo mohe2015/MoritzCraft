@@ -14,3 +14,4 @@ winit = { git = "https://github.com/rust-windowing/winit" }
 bytemuck = "1"
 png = "0.17"
 nalgebra = "0.31"
+rand = "0.8"

@@ -1,6 +1,7 @@
 use std::{io::Cursor, sync::Arc, time::Instant};
 
 use nalgebra::{Matrix4, Point3, Vector3};
+use rand::Rng;
 use vulkano::{
     buffer::{BufferUsage, CpuBufferPool, ImmutableBuffer, TypedBufferAccess},
     command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents},
@@ -401,6 +402,8 @@ impl MainPipeline {
             )
             .unwrap();
 
+        let mut rng = rand::thread_rng();
+
         // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
 
         // Now we create another buffer that will store the unique data per instance.
@@ -411,7 +414,7 @@ impl MainPipeline {
                 for y in 0..1 {
                     for z in 0..1000 {
                         data.push(InstanceData {
-                            position_offset: [x as f32 * 20.0, y as f32 * 20.0, z as f32 * 20.0],
+                            position_offset: [rng.gen_range(0..1000) as f32 * 20.0, rng.gen_range(0..100) as f32 * 20.0, rng.gen_range(0..1000) as f32 * 20.0],
                         });
                     }
                 }
