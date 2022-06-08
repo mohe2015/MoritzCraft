@@ -79,11 +79,11 @@ impl MainPipeline {
         queue: Arc<Queue>,
         images: Vec<Arc<SwapchainImage<Window>>>,
     ) -> Self {
-                // https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
+        // https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
+        // https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/
         // x right
         // y down
         // z back
-
 
         // counter clockwise around the whole face (for back-face culling)
 
@@ -406,8 +406,6 @@ impl MainPipeline {
 
         // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
 
-        // Now we create another buffer that will store the unique data per instance.
-        // For this example, we'll have the instances form a 10x10 grid that slowly gets larger.
         let instances = {
             let mut data = Vec::new();
             for x in 0..1000 {
@@ -583,13 +581,6 @@ impl MainPipeline {
 
         // this part here is pipeline-specific
         let uniform_buffer_subbuffer = {
-            /*  let elapsed = self.rotation_start.elapsed();
-                        let rotation =
-                            elapsed.as_secs() as f64 + elapsed.subsec_nanos() as f64 / 1_000_000_000.0;
-                        let rotation_mat = Matrix4::from_angle_y(Rad(rotation as f32));
-                        let rotation_mat2 = Matrix4::from_angle_x(Rad((rotation/10f64) as f32));
-
-            */
             if self.rotate_left {
                 self.world_position =
                     Matrix4::new_rotation(Vector3::new(0.0, 0.02, 0.0)) * self.world_position;
