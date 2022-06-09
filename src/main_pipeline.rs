@@ -411,11 +411,16 @@ impl MainPipeline {
             for x in 0..1000 {
                 for y in 0..1 {
                     for z in 0..1000 {
-                        data.push(InstanceData {
+                        /*data.push(InstanceData {
                             position_offset: [
                                 rng.gen_range(0..1000) as f32 * 20.0,
                                 rng.gen_range(0..100) as f32 * 20.0,
                                 rng.gen_range(0..1000) as f32 * 20.0,
+                            ],
+                        });*/
+                        data.push(InstanceData {
+                            position_offset: [
+                                x as f32 * 20.0, y as f32 * 20.0, z as f32 * 20.0
                             ],
                         });
                     }
@@ -481,11 +486,16 @@ impl MainPipeline {
             (ImageView::new_default(image).unwrap(), future)
         };
 
+        // https://docs.rs/vulkano/latest/vulkano/sampler/struct.SamplerCreateInfo.html
+        // https://vulkan-tutorial.com/Texture_mapping/Image_view_and_sampler
         let sampler = Sampler::new(
             device.clone(),
             SamplerCreateInfo {
-                mag_filter: Filter::Nearest,
-                min_filter: Filter::Nearest,
+                mag_filter: Filter::Linear,
+                min_filter: Filter::Linear,
+                mipmap_mode: vulkano::sampler::SamplerMipmapMode::Nearest,
+                lod: 0.0..=100.0,
+                anisotropy: Some(device.physical_device().properties().max_sampler_anisotropy),
                 address_mode: [SamplerAddressMode::Repeat; 3],
                 ..Default::default()
             },

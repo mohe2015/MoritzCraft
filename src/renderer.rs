@@ -10,7 +10,7 @@
 use crate::main_pipeline::MainPipeline;
 
 use vulkano::device::physical::{PhysicalDevice, PhysicalDeviceType};
-use vulkano::device::{DeviceCreateInfo, DeviceExtensions, QueueCreateInfo};
+use vulkano::device::{DeviceCreateInfo, DeviceExtensions, Features, QueueCreateInfo};
 use vulkano::image::ImageUsage;
 use vulkano::instance::{Instance, InstanceCreateInfo};
 
@@ -76,6 +76,10 @@ impl PoritzCraftRenderer {
                 enabled_extensions: physical_device
                     .required_extensions()
                     .union(&device_extensions),
+                enabled_features: Features {
+                    sampler_anisotropy: true,
+                    ..Features::none()
+                },
                 queue_create_infos: vec![QueueCreateInfo::family(queue_family)],
                 ..Default::default()
             },
