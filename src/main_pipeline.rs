@@ -57,11 +57,6 @@ pub struct MainPipeline {
     queue: Arc<Queue>,
 
     pub view_matrix: Matrix4<f32>,
-
-    pub pan_up: bool,
-    pub pan_left: bool,
-    pub pan_down: bool,
-    pub pan_right: bool,
 }
 
 impl MainPipeline {
@@ -525,10 +520,6 @@ impl MainPipeline {
             surface,
             swapchain,
             queue,
-            pan_down: false,
-            pan_left: false,
-            pan_right: false,
-            pan_up: false,
             view_matrix: Matrix4::new_translation(&Vector3::new(-250.0, -250.0, -250.0)),
         }
     }
@@ -577,23 +568,6 @@ impl MainPipeline {
 
         // this part here is pipeline-specific
         let uniform_buffer_subbuffer = {
-            if self.pan_up {
-                self.view_matrix =
-                    Matrix4::new_translation(&Vector3::new(0.0, 0.0, 20.0)) * self.view_matrix;
-            }
-            if self.pan_down {
-                self.view_matrix =
-                    Matrix4::new_translation(&Vector3::new(0.0, 0.0, -20.0)) * self.view_matrix;
-            }
-            if self.pan_left {
-                self.view_matrix =
-                    Matrix4::new_translation(&Vector3::new(-20.0, 0.0, 0.0)) * self.view_matrix;
-            }
-            if self.pan_right {
-                self.view_matrix =
-                    Matrix4::new_translation(&Vector3::new(20.0, 0.0, 0.0)) * self.view_matrix;
-            }
-
             let aspect_ratio =
                 self.swapchain.image_extent()[0] as f32 / self.swapchain.image_extent()[1] as f32;
             let proj = Matrix4::new_perspective(
