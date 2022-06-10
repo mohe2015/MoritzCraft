@@ -9,8 +9,9 @@
 
 use crate::{renderer::PoritzCraftRenderer, utils::state_is_pressed};
 
+use nalgebra::{Matrix4, Vector3};
 use winit::{
-    event::{Event, VirtualKeyCode, WindowEvent},
+    event::{DeviceEvent, Event, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
 };
 
@@ -45,9 +46,6 @@ impl PoritzCraftWindow {
             } => {
                 if let Some(key_code) = input.virtual_keycode {
                     match key_code {
-                        VirtualKeyCode::LControl => {
-                            renderer.main_pipeline.control = state_is_pressed(input.state)
-                        }
                         VirtualKeyCode::W => {
                             renderer.main_pipeline.pan_up = state_is_pressed(input.state)
                         }
@@ -59,18 +57,6 @@ impl PoritzCraftWindow {
                         }
                         VirtualKeyCode::D => {
                             renderer.main_pipeline.pan_right = state_is_pressed(input.state)
-                        }
-                        VirtualKeyCode::Left => {
-                            renderer.main_pipeline.rotate_left = state_is_pressed(input.state)
-                        }
-                        VirtualKeyCode::Right => {
-                            renderer.main_pipeline.rotate_right = state_is_pressed(input.state)
-                        }
-                        VirtualKeyCode::Up => {
-                            renderer.main_pipeline.rotate_up = state_is_pressed(input.state)
-                        }
-                        VirtualKeyCode::Down => {
-                            renderer.main_pipeline.rotate_down = state_is_pressed(input.state)
                         }
                         _ => (),
                     }
@@ -89,6 +75,17 @@ impl PoritzCraftWindow {
                 event: WindowEvent::CursorMoved { position: _, .. },
                 ..
             } => {}
+            Event::DeviceEvent {
+                event: DeviceEvent::MouseMotion { delta },
+                ..
+            } => {
+                println!("{delta:?}");
+
+                let rotvec = Vector3::new(delta.1 as f32 * -0.05f32, delta.0 as f32 * 0.05f32, 0.0);
+                let rot = Matrix4::new_rotation(rotvec);
+
+                renderer.main_pipeline.view_matrix = rot * renderer.main_pipeline.view_matrix;
+            }
             Event::WindowEvent {
                 event: WindowEvent::MouseWheel { delta: _, .. },
                 ..

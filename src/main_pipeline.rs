@@ -1,6 +1,6 @@
 use std::{io::Cursor, sync::Arc, time::Instant};
 
-use nalgebra::{Matrix4, Point3, Vector3};
+use nalgebra::{Affine3, Matrix4, Point3, Vector3};
 use rand::Rng;
 use vulkano::{
     buffer::{BufferUsage, CpuBufferPool, ImmutableBuffer, TypedBufferAccess},
@@ -62,13 +62,6 @@ pub struct MainPipeline {
     pub pan_left: bool,
     pub pan_down: bool,
     pub pan_right: bool,
-
-    pub rotate_up: bool,
-    pub rotate_left: bool,
-    pub rotate_down: bool,
-    pub rotate_right: bool,
-
-    pub control: bool,
 }
 
 impl MainPipeline {
@@ -419,9 +412,7 @@ impl MainPipeline {
                             ],
                         });*/
                         data.push(InstanceData {
-                            position_offset: [
-                                x as f32 * 20.0, y as f32 * 20.0, z as f32 * 20.0
-                            ],
+                            position_offset: [x as f32 * 20.0, y as f32 * 20.0, z as f32 * 20.0],
                         });
                     }
                 }
@@ -538,11 +529,6 @@ impl MainPipeline {
             pan_left: false,
             pan_right: false,
             pan_up: false,
-            rotate_down: false,
-            rotate_left: false,
-            rotate_right: false,
-            rotate_up: false,
-            control: false,
             view_matrix: Matrix4::new_translation(&Vector3::new(-250.0, -250.0, -250.0)),
         }
     }
@@ -591,22 +577,6 @@ impl MainPipeline {
 
         // this part here is pipeline-specific
         let uniform_buffer_subbuffer = {
-            if self.rotate_left {
-                self.view_matrix =
-                    Matrix4::new_rotation(Vector3::new(0.0, 0.02, 0.0)) * self.view_matrix;
-            }
-            if self.rotate_right {
-                self.view_matrix =
-                    Matrix4::new_rotation(Vector3::new(0.0, -0.02, 0.0)) * self.view_matrix;
-            }
-            if self.rotate_up {
-                self.view_matrix =
-                    Matrix4::new_rotation(Vector3::new(0.02, 0.0, 0.0)) * self.view_matrix;
-            }
-            if self.rotate_down {
-                self.view_matrix =
-                    Matrix4::new_rotation(Vector3::new(-0.02, 0.0, 0.0)) * self.view_matrix;
-            }
             if self.pan_up {
                 self.view_matrix =
                     Matrix4::new_translation(&Vector3::new(0.0, 0.0, 20.0)) * self.view_matrix;
