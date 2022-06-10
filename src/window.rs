@@ -47,12 +47,15 @@ impl PoritzCraftWindow {
                 if let Some(key_code) = input.virtual_keycode {
                     match key_code {
                         VirtualKeyCode::W => {
-                            let test = Isometry3::<f32> {
-                                rotation: UnitQuaternion::<f32>::identity(),
-                                translation: Translation3::new(-250.0, -250.0, -250.0),
-                            };
-
-                            renderer.main_pipeline.view_matrix = renderer.main_pipeline.view_matrix;
+                            let trans =  Translation3::<f32>::new(10.0, 0.0, 0.0);
+                            // what
+                            //let e = renderer.main_pipeline.view_rotation * trans;
+                            let d = renderer.main_pipeline.view_rotation * trans;
+                            println!("{}", d.translation);
+                            /*let a = (d).to_matrix().column(3);
+                            let trans = Translation3::<f32>::from(d);
+                            
+                            renderer.main_pipeline.view_translation = Translation3::from(renderer.main_pipeline.view_translation.vector + trans.vector);*/
                         }
                         _ => (),
                     }
@@ -77,10 +80,9 @@ impl PoritzCraftWindow {
             } => {
                 println!("{delta:?}");
 
-                let rotvec = Vector3::new(delta.1 as f32 * -0.05f32, delta.0 as f32 * 0.05f32, 0.0);
-                let rot = Matrix4::new_rotation(rotvec);
+                let rot = Rotation3::new(Vector3::new(delta.1 as f32 * -0.05f32, delta.0 as f32 * 0.05f32, 0.0));
 
-                renderer.main_pipeline.view_matrix = rot * renderer.main_pipeline.view_matrix;
+                renderer.main_pipeline.view_rotation = rot * renderer.main_pipeline.view_rotation;
             }
             Event::WindowEvent {
                 event: WindowEvent::MouseWheel { delta: _, .. },
