@@ -59,8 +59,7 @@ pub struct MainPipeline {
     rotation_start: Instant,
     queue: Arc<Queue>,
 
-    pub view_rotation: Rotation3<f32>,
-    pub view_translation: Translation3<f32>,
+    pub view_isometry: Isometry3<f32>,
 }
 
 impl MainPipeline {
@@ -524,8 +523,10 @@ impl MainPipeline {
             surface,
             swapchain,
             queue,
-            view_rotation: Rotation3::<f32>::identity(),
-            view_translation: Translation3::new(-250.0, -250.0, -250.0),
+            view_isometry: Isometry3 {
+                rotation: UnitQuaternion::<f32>::identity(),
+                translation: Translation3::new(-250.0, -250.0, -250.0)
+            },
         }
     }
 
@@ -586,7 +587,7 @@ impl MainPipeline {
                 &Point3::new(0.0, 0.0, 0.0),
                 &Vector3::new(0.0, -1.0, 0.0),
             );*/
-            let view = self.view_rotation * self.view_translation;
+            let view = self.view_isometry;
 
             let uniform_data = vs::ty::Data {
                 world: Matrix4::identity().into(), //self.view_matrix.into(),

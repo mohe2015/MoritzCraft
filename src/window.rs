@@ -48,14 +48,11 @@ impl PoritzCraftWindow {
                     match key_code {
                         VirtualKeyCode::W => {
                             let trans =  Translation3::<f32>::new(10.0, 0.0, 0.0);
-                            // what
-                            //let e = renderer.main_pipeline.view_rotation * trans;
-                            let d = renderer.main_pipeline.view_rotation * trans;
+                            let d = renderer.main_pipeline.view_isometry.rotation * trans;
                             println!("{}", d.translation);
-                            /*let a = (d).to_matrix().column(3);
-                            let trans = Translation3::<f32>::from(d);
                             
-                            renderer.main_pipeline.view_translation = Translation3::from(renderer.main_pipeline.view_translation.vector + trans.vector);*/
+                            // Translation3::from(renderer.main_pipeline.view_translation.vector + trans.vector)
+                            renderer.main_pipeline.view_isometry *= d;
                         }
                         _ => (),
                     }
@@ -82,7 +79,7 @@ impl PoritzCraftWindow {
 
                 let rot = Rotation3::new(Vector3::new(delta.1 as f32 * -0.05f32, delta.0 as f32 * 0.05f32, 0.0));
 
-                renderer.main_pipeline.view_rotation = rot * renderer.main_pipeline.view_rotation;
+                renderer.main_pipeline.view_isometry.append_rotation_wrt_center_mut(UnitQuaternion::from_axis_angle(axis, angle))
             }
             Event::WindowEvent {
                 event: WindowEvent::MouseWheel { delta: _, .. },
