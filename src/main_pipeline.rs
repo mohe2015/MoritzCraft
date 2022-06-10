@@ -2,7 +2,7 @@ use std::{io::Cursor, sync::Arc, time::Instant};
 
 use nalgebra::{
     Affine3, Isometry3, Matrix4, Point3, Quaternion, Translation, Translation3, UnitQuaternion,
-    Vector3, Rotation3,
+    Vector3, Rotation3, IsometryMatrix3,
 };
 use rand::Rng;
 use vulkano::{
@@ -59,7 +59,7 @@ pub struct MainPipeline {
     rotation_start: Instant,
     queue: Arc<Queue>,
 
-    pub view_isometry: Isometry3<f32>,
+    pub view_isometry: IsometryMatrix3<f32>,
 }
 
 impl MainPipeline {
@@ -523,8 +523,8 @@ impl MainPipeline {
             surface,
             swapchain,
             queue,
-            view_isometry: Isometry3 {
-                rotation: UnitQuaternion::<f32>::identity(),
+            view_isometry: IsometryMatrix3 {
+                rotation: Rotation3::<f32>::identity(),
                 translation: Translation3::new(-250.0, -250.0, -250.0)
             },
         }

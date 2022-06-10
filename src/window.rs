@@ -79,7 +79,7 @@ impl PoritzCraftWindow {
 
                 let rot = Rotation3::new(Vector3::new(delta.1 as f32 * -0.05f32, delta.0 as f32 * 0.05f32, 0.0));
 
-                renderer.main_pipeline.view_isometry.append_rotation_wrt_center_mut(UnitQuaternion::from_axis_angle(axis, angle))
+                renderer.main_pipeline.view_isometry.append_rotation_wrt_center_mut(&rot);
             }
             Event::WindowEvent {
                 event: WindowEvent::MouseWheel { delta: _, .. },
