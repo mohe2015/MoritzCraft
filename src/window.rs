@@ -9,7 +9,7 @@
 
 use crate::{renderer::PoritzCraftRenderer, utils::state_is_pressed};
 
-use nalgebra::{Matrix4, Vector3, Rotation3, Isometry3};
+use nalgebra::{Isometry3, Matrix4, Rotation3, Vector3, Translation3, UnitQuaternion};
 use winit::{
     event::{DeviceEvent, Event, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -47,12 +47,12 @@ impl PoritzCraftWindow {
                 if let Some(key_code) = input.virtual_keycode {
                     match key_code {
                         VirtualKeyCode::W => {
+                            let test = Isometry3::<f32> {
+                                rotation: UnitQuaternion::<f32>::identity(),
+                                translation: Translation3::new(-250.0, -250.0, -250.0),
+                            };
 
-                            let test = Isometry3::<f32>::identity();
-
-                            renderer.main_pipeline.view_matrix = renderer.main_pipeline.view_matrix *
-                                    Matrix4::new_translation(&Vector3::new(0.0, 0.0, 20.0));
-                           
+                            renderer.main_pipeline.view_matrix = renderer.main_pipeline.view_matrix;
                         }
                         _ => (),
                     }
