@@ -524,10 +524,8 @@ impl MainPipeline {
             surface,
             swapchain,
             queue,
-            view_matrix: Isometry3::<f32> {
-                rotation: UnitQuaternion::<f32>::identity(),
-                translation: Translation3::new(-250.0, -250.0, -250.0),
-            },
+            view_rotation: Rotation3::<f32>::identity(),
+            view_translation: Translation3::new(-250.0, -250.0, -250.0),
         }
     }
 
@@ -588,7 +586,7 @@ impl MainPipeline {
                 &Point3::new(0.0, 0.0, 0.0),
                 &Vector3::new(0.0, -1.0, 0.0),
             );*/
-            let view = self.view_matrix;
+            let view = self.view_rotation * self.view_translation;
 
             let uniform_data = vs::ty::Data {
                 world: Matrix4::identity().into(), //self.view_matrix.into(),
