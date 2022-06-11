@@ -50,7 +50,6 @@ impl PoritzCraftWindow {
                             let trans = Translation3::<f32>::new(0.0, 0.0, 10.0);
                             let d = renderer.main_pipeline.view_rotation.inverse() * trans;
 
-                            println!("{}", d.translation);
 
                             // Translation3::from(renderer.main_pipeline.view_translation.vector + trans.vector)
                             renderer.main_pipeline.view_translation =
@@ -77,15 +76,21 @@ impl PoritzCraftWindow {
                 event: DeviceEvent::MouseMotion { delta },
                 ..
             } => {
-                println!("{delta:?}");
-
-                let rot = Rotation3::new(Vector3::new(
+                let rot1 = Rotation3::new(Vector3::new(
                     delta.1 as f32 * -0.05f32,
-                    delta.0 as f32 * 0.05f32,
                     0.0,
+                    0.0
                 ));
 
-                renderer.main_pipeline.view_rotation = rot * renderer.main_pipeline.view_rotation;
+                let rot2 = Rotation3::new(Vector3::new(
+                    0.0,
+                    delta.0 as f32 * 0.05f32,
+                    0.0
+                ));
+
+                renderer.main_pipeline.view_rotation = rot2 * rot1 * renderer.main_pipeline.view_rotation;
+
+                println!("{:?}", renderer.main_pipeline.view_rotation);
             }
             Event::WindowEvent {
                 event: WindowEvent::MouseWheel { delta: _, .. },

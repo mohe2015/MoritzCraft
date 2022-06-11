@@ -462,8 +462,6 @@ impl MainPipeline {
             image_data.resize((info.width * info.height * 4) as usize, 0);
             let output = reader.next_frame(&mut image_data).unwrap();
 
-            println!("{:?}", output);
-
             let (image, future) = ImmutableImage::from_iter(
                 image_data,
                 dimensions,
