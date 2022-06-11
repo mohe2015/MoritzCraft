@@ -449,7 +449,7 @@ impl MainPipeline {
         .unwrap();
 
         let (texture, tex_future) = {
-            let png_bytes = include_bytes!("dirt.png").to_vec();
+            let png_bytes = include_bytes!("block/dirt.png").to_vec();
             let cursor = Cursor::new(png_bytes);
             let decoder = png::Decoder::new(cursor);
             let mut reader = decoder.read_info().unwrap();
