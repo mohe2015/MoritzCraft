@@ -50,7 +50,6 @@ impl PoritzCraftWindow {
                             let trans = Translation3::<f32>::new(0.0, 0.0, 10.0);
                             let d = renderer.main_pipeline.build_rotation().inverse() * trans;
 
-
                             // Translation3::from(renderer.main_pipeline.view_translation.vector + trans.vector)
                             renderer.main_pipeline.view_translation =
                                 d.translation * renderer.main_pipeline.view_translation;
@@ -76,13 +75,12 @@ impl PoritzCraftWindow {
                 event: DeviceEvent::MouseMotion { delta },
                 ..
             } => {
-              
                 // from_axis_angle
                 //  Vector3::y_axis();
                 // rotation_between
 
-                renderer.main_pipeline.view_rotation_pitch += delta.0 as f32;
-                renderer.main_pipeline.view_rotation_yaw += delta.1 as f32;
+                renderer.main_pipeline.view_rotation_yaw += delta.0 * -0.05;
+                renderer.main_pipeline.view_rotation_pitch += delta.1 * -0.05;
             }
             Event::WindowEvent {
                 event: WindowEvent::MouseWheel { delta: _, .. },
