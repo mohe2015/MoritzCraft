@@ -479,8 +479,8 @@ impl MainPipeline {
         let sampler = Sampler::new(
             device.clone(),
             SamplerCreateInfo {
-                mag_filter: Filter::Linear,
-                min_filter: Filter::Linear,
+                mag_filter: Filter::Nearest,
+                min_filter: Filter::Nearest,
                 mipmap_mode: vulkano::sampler::SamplerMipmapMode::Nearest,
                 lod: 0.0..=100.0,
                 anisotropy: Some(device.physical_device().properties().max_sampler_anisotropy),
