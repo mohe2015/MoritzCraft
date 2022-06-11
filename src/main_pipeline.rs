@@ -1,8 +1,8 @@
 use std::{io::Cursor, sync::Arc, time::Instant};
 
 use nalgebra::{
-    Affine3, Isometry3, Matrix4, Point3, Quaternion, Translation, Translation3, UnitQuaternion,
-    Vector3, Rotation3, IsometryMatrix3,
+    Affine3, Isometry3, IsometryMatrix3, Matrix4, Point3, Quaternion, Rotation3, Translation,
+    Translation3, UnitQuaternion, Vector3,
 };
 use rand::Rng;
 use vulkano::{
@@ -56,10 +56,10 @@ pub struct MainPipeline {
     pub recreate_swapchain: bool,
     swapchain: Arc<Swapchain<Window>>,
     surface: Arc<Surface<Window>>,
-    rotation_start: Instant,
     queue: Arc<Queue>,
 
-    pub view_isometry: IsometryMatrix3<f32>,
+    pub view_rotation: Rotation3<f32>,
+    pub view_translation: Translation3<f32>,
 }
 
 impl MainPipeline {
@@ -399,9 +399,9 @@ impl MainPipeline {
 
         let instances = {
             let mut data = Vec::new();
-            for x in 0..1000 {
+            for x in 0..100 {
                 for y in 0..1 {
-                    for z in 0..1000 {
+                    for z in 0..100 {
                         /*data.push(InstanceData {
                             position_offset: [
                                 rng.gen_range(0..1000) as f32 * 20.0,
@@ -519,14 +519,11 @@ impl MainPipeline {
                     .boxed(),
             ),
             recreate_swapchain: false,
-            rotation_start,
             surface,
             swapchain,
             queue,
-            view_isometry: IsometryMatrix3 {
-                rotation: Rotation3::<f32>::identity(),
-                translation: Translation3::new(-250.0, -250.0, -250.0)
-            },
+            view_rotation: Rotation3::<f32>::identity(),
+            view_translation: Translation3::new(-250.0, -250.0, -250.0),
         }
     }
 
@@ -587,7 +584,7 @@ impl MainPipeline {
                 &Point3::new(0.0, 0.0, 0.0),
                 &Vector3::new(0.0, -1.0, 0.0),
             );*/
-            let view = self.view_isometry;
+            let view = self.view_rotation * self.view_translation;
 
             let uniform_data = vs::ty::Data {
                 world: Matrix4::identity().into(), //self.view_matrix.into(),

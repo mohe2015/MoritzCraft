@@ -9,7 +9,7 @@
 
 use crate::{renderer::PoritzCraftRenderer, utils::state_is_pressed};
 
-use nalgebra::{Isometry3, Matrix4, Rotation3, Vector3, Translation3, UnitQuaternion};
+use nalgebra::{Isometry3, Matrix4, Rotation3, Translation3, UnitQuaternion, Vector3};
 use winit::{
     event::{DeviceEvent, Event, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -47,12 +47,14 @@ impl PoritzCraftWindow {
                 if let Some(key_code) = input.virtual_keycode {
                     match key_code {
                         VirtualKeyCode::W => {
-                            let trans =  Translation3::<f32>::new(10.0, 0.0, 0.0);
-                            let d = renderer.main_pipeline.view_isometry.rotation * trans;
+                            let trans = Translation3::<f32>::new(0.0, 0.0, 10.0);
+                            let d = renderer.main_pipeline.view_rotation.inverse() * trans;
+
                             println!("{}", d.translation);
-                            
+
                             // Translation3::from(renderer.main_pipeline.view_translation.vector + trans.vector)
-                            renderer.main_pipeline.view_isometry *= d;
+                            renderer.main_pipeline.view_translation =
+                                d.translation * renderer.main_pipeline.view_translation;
                         }
                         _ => (),
                     }
@@ -77,9 +79,13 @@ impl PoritzCraftWindow {
             } => {
                 println!("{delta:?}");
 
-                let rot = Rotation3::new(Vector3::new(delta.1 as f32 * -0.05f32, delta.0 as f32 * 0.05f32, 0.0));
+                let rot = Rotation3::new(Vector3::new(
+                    delta.1 as f32 * -0.05f32,
+                    delta.0 as f32 * 0.05f32,
+                    0.0,
+                ));
 
-                renderer.main_pipeline.view_isometry.append_rotation_wrt_center_mut(&rot);
+                renderer.main_pipeline.view_rotation = rot * renderer.main_pipeline.view_rotation;
             }
             Event::WindowEvent {
                 event: WindowEvent::MouseWheel { delta: _, .. },
