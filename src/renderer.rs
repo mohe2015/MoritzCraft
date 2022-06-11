@@ -81,6 +81,7 @@ impl PoritzCraftRenderer {
                     .union(&device_extensions),
                 enabled_features: Features {
                     sampler_anisotropy: true,
+                    descriptor_binding_variable_descriptor_count: true,
                     ..Features::none()
                 },
                 queue_create_infos: vec![QueueCreateInfo::family(queue_family)],
