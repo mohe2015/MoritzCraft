@@ -8,7 +8,12 @@ use rand::Rng;
 use vulkano::{
     buffer::{BufferUsage, CpuBufferPool, ImmutableBuffer, TypedBufferAccess},
     command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents},
-    descriptor_set::{PersistentDescriptorSet, WriteDescriptorSet},
+    descriptor_set::{
+        layout::{
+            DescriptorSetLayout, DescriptorSetLayoutCreateInfo, DescriptorSetLayoutCreationError,
+        },
+        PersistentDescriptorSet, WriteDescriptorSet,
+    },
     device::{Device, Queue},
     format::Format,
     image::{
@@ -23,7 +28,8 @@ use vulkano::{
             vertex_input::BuffersDefinition,
             viewport::{Viewport, ViewportState},
         },
-        GraphicsPipeline, Pipeline, PipelineBindPoint, StateMode,
+        layout::PipelineLayoutCreateInfo,
+        GraphicsPipeline, Pipeline, PipelineBindPoint, PipelineLayout, StateMode,
     },
     render_pass::{Framebuffer, FramebufferCreateInfo, RenderPass, Subpass},
     sampler::{Filter, Sampler, SamplerAddressMode, SamplerCreateInfo},
@@ -448,7 +454,7 @@ impl MainPipeline {
         )
         .unwrap();
 
-        let (texture, tex_future) = {
+        let dirt_texture = {
             let png_bytes = include_bytes!("block/dirt.png").to_vec();
             let cursor = Cursor::new(png_bytes);
             let decoder = png::Decoder::new(cursor);
@@ -463,15 +469,17 @@ impl MainPipeline {
             image_data.resize((info.width * info.height * 4) as usize, 0);
             let output = reader.next_frame(&mut image_data).unwrap();
 
-            let (image, future) = ImmutableImage::from_iter(
+            let image = ImmutableImage::from_iter(
                 image_data,
                 dimensions,
                 MipmapsCount::One,
                 Format::R8G8B8A8_SRGB,
                 queue.clone(),
             )
-            .unwrap();
-            (ImageView::new_default(image).unwrap(), future)
+            .unwrap()
+            .0;
+
+            ImageView::new_default(image).unwrap()
         };
 
         // https://docs.rs/vulkano/latest/vulkano/sampler/struct.SamplerCreateInfo.html
@@ -493,8 +501,6 @@ impl MainPipeline {
         let (pipeline, framebuffers) =
             window_size_dependent_setup(device.clone(), &vs, &fs, &images, render_pass.clone());
 
-        let rotation_start = Instant::now();
-
         Self {
             normals_buffer,
             texture_coordinate_buffer,
@@ -503,15 +509,14 @@ impl MainPipeline {
             pipeline,
             uniform_buffer,
             sampler,
-            texture,
+            texture: dirt_texture,
             framebuffers,
             fs,
             vs,
             render_pass,
             device,
             previous_frame_end: Some(
-                tex_future
-                    .join(vertex_buffer_future)
+                vertex_buffer_future
                     .join(normals_buffer_future)
                     .join(texture_coordinate_buffer_future)
                     .join(instance_buffer_future)
@@ -612,12 +617,16 @@ impl MainPipeline {
         .unwrap();
 
         let layout2 = self.pipeline.layout().set_layouts().get(1).unwrap();
-        let set2 = PersistentDescriptorSet::new(
+        let set2 = PersistentDescriptorSet::new_variable(
             layout2.clone(),
-            [WriteDescriptorSet::image_view_sampler(
+            2,
+            [WriteDescriptorSet::image_view_sampler_array(
                 0,
-                self.texture.clone(),
-                self.sampler.clone(),
+                0,
+                [
+                    (self.texture.clone() as _, self.sampler.clone()),
+                    (self.texture.clone() as _, self.sampler.clone()),
+                ],
             )],
         )
         .unwrap();
@@ -724,10 +733,39 @@ fn window_size_dependent_setup(
         })
         .collect::<Vec<_>>();
 
-    // In the triangle example we use a dynamic viewport, as its a simple example.
-    // However in the teapot example, we recreate the pipelines with a hardcoded viewport instead.
-    // This allows the driver to optimize things, at the cost of slower window resizes.
-    // https://computergraphics.stackexchange.com/questions/5742/vulkan-best-way-of-updating-pipeline-viewport
+    let pipeline_layout = {
+        let mut layout_create_infos: Vec<_> = DescriptorSetLayoutCreateInfo::from_requirements(
+            fs.entry_point("main").unwrap().descriptor_requirements(),
+        );
+
+        // Set 0, Binding 0
+        let binding = layout_create_infos[1].bindings.get_mut(&0).unwrap();
+        binding.variable_descriptor_count = true;
+        binding.descriptor_count = 2;
+
+        let set_layouts = layout_create_infos
+            .into_iter()
+            .map(|desc| Ok(DescriptorSetLayout::new(device.clone(), desc.clone())?))
+            .collect::<Result<Vec<_>, DescriptorSetLayoutCreationError>>()
+            .unwrap();
+
+        PipelineLayout::new(
+            device.clone(),
+            PipelineLayoutCreateInfo {
+                set_layouts,
+                push_constant_ranges: fs
+                    .entry_point("main")
+                    .unwrap()
+                    .push_constant_requirements()
+                    .cloned()
+                    .into_iter()
+                    .collect(),
+                ..Default::default()
+            },
+        )
+        .unwrap()
+    };
+
     let pipeline = GraphicsPipeline::start()
         .vertex_input_state(
             BuffersDefinition::new()
@@ -757,7 +795,7 @@ fn window_size_dependent_setup(
             front_face: StateMode::Fixed(FrontFace::CounterClockwise),
             ..Default::default()
         })
-        .build(device)
+        .with_pipeline_layout(device.clone(), pipeline_layout)
         .unwrap();
 
     (pipeline, framebuffers)
