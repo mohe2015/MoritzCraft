@@ -58,7 +58,8 @@ pub struct MainPipeline {
     surface: Arc<Surface<Window>>,
     queue: Arc<Queue>,
 
-    pub view_rotation: Rotation3<f32>,
+    pub view_rotation_pitch: f32,
+    pub view_rotation_yaw: f32,
     pub view_translation: Translation3<f32>,
 }
 
@@ -520,9 +521,25 @@ impl MainPipeline {
             surface,
             swapchain,
             queue,
-            view_rotation: Rotation3::<f32>::identity(),
+            view_rotation_pitch: 0.0,
+            view_rotation_yaw: 0.0,
             view_translation: Translation3::new(-250.0, -250.0, -250.0),
         }
+    }
+
+    pub fn build_rotation(&self) -> Rotation3<f32> {
+        let rot1 = Rotation3::new(Vector3::new(
+            self.view_rotation_pitch as f32 * -0.05f32,
+            0.0,
+            0.0
+        ));
+
+        let rot2 = Rotation3::new(Vector3::new(
+            0.0,
+            self.view_rotation_yaw as f32 * 0.05f32,
+            0.0
+        ));
+        return rot1 * rot2;
     }
 
     pub fn render(&mut self) {
@@ -582,7 +599,8 @@ impl MainPipeline {
                 &Point3::new(0.0, 0.0, 0.0),
                 &Vector3::new(0.0, -1.0, 0.0),
             );*/
-            let view = self.view_rotation * self.view_translation;
+            
+            let view = self.build_rotation() * self.view_translation;
 
             let uniform_data = vs::ty::Data {
                 world: Matrix4::identity().into(), //self.view_matrix.into(),
