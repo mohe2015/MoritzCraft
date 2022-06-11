@@ -79,8 +79,8 @@ impl PoritzCraftWindow {
                 //  Vector3::y_axis();
                 // rotation_between
 
-                renderer.main_pipeline.view_rotation_yaw += delta.0 * -0.05;
-                renderer.main_pipeline.view_rotation_pitch += delta.1 * -0.05;
+                renderer.main_pipeline.view_rotation_yaw += delta.0 * -0.025;
+                renderer.main_pipeline.view_rotation_pitch += delta.1 * -0.025;
             }
             Event::WindowEvent {
                 event: WindowEvent::MouseWheel { delta: _, .. },
