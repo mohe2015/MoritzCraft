@@ -419,7 +419,7 @@ impl MainPipeline {
                             ],
                         });*/
                         data.push(InstanceData {
-                            position_offset: [x as f32 * 30.0, y as f32 * 30.0, z as f32 * 30.0],
+                            position_offset: [x as f32 * 20.0, y as f32 * 20.0, z as f32 * 20.0],
                             block_type: rng.gen_range(0..=1),
                         });
                     }

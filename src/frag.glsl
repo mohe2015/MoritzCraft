@@ -15,6 +15,6 @@ const vec3 LIGHT = vec3(1.0, 5.0, 1.0);
 void main() {
     float brightness = clamp(dot(normalize(v_normal), normalize(LIGHT)), 0.6, 1);
   
-    vec4 texture_color = texture(tex[v_block_type], tex_coords);
+    vec4 texture_color = texture(tex[nonuniformEXT(v_block_type)], tex_coords);
     f_color = texture_color * 2.0 * brightness;
 }
