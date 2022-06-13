@@ -770,7 +770,7 @@ fn window_size_dependent_setup(
                 .chain(vs.entry_point("main").unwrap().descriptor_requirements()),
         );
 
-        println!("{:#?}", layout_create_infos);
+        //println!("{:#?}", layout_create_infos);
         let binding = layout_create_infos[1].bindings.get_mut(&0).unwrap();
         binding.variable_descriptor_count = true;
         binding.descriptor_count = 2;

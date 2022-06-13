@@ -12,7 +12,8 @@ use crate::main_pipeline::MainPipeline;
 use vulkano::device::physical::{PhysicalDevice, PhysicalDeviceType};
 use vulkano::device::{DeviceCreateInfo, DeviceExtensions, Features, QueueCreateInfo};
 use vulkano::image::ImageUsage;
-use vulkano::instance::{Instance, InstanceCreateInfo};
+use vulkano::instance::debug::DebugCallback;
+use vulkano::instance::{Instance, InstanceCreateInfo, layers_list};
 
 use vulkano::{
     device::Device,
@@ -29,11 +30,23 @@ pub struct PoritzCraftRenderer {
 impl PoritzCraftRenderer {
     pub fn new(event_loop: &EventLoop<()>) -> Self {
         let required_extensions = vulkano_win::required_extensions();
+        
+        println!("List of Vulkan debugging layers available to use:");
+        let mut layers = layers_list().unwrap();
+        while let Some(l) = layers.next() {
+            //println!("\t{}", l.name());
+        }
+
         let instance = Instance::new(InstanceCreateInfo {
             enabled_extensions: required_extensions,
+            enabled_layers: vec!["VK_LAYER_KHRONOS_validation".to_owned()],
             ..Default::default()
         })
         .unwrap();
+
+        let _callback = DebugCallback::errors_and_warnings(&instance, |msg| {
+            println!("Debug callback: {:?}", msg.description);
+        }).ok();
 
         let window = WindowBuilder::new()
             .with_title("PoritzCraft")
@@ -81,6 +94,7 @@ impl PoritzCraftRenderer {
                     .required_extensions()
                     .union(&device_extensions),
                 enabled_features: Features {
+                    
                     sampler_anisotropy: true,
                     descriptor_indexing: true,
                     descriptor_binding_variable_descriptor_count: true,
