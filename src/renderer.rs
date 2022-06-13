@@ -46,10 +46,11 @@ impl PoritzCraftRenderer {
         })
         .unwrap();
 
-        let debug_create_info = DebugUtilsMessengerCreateInfo::user_callback(Arc::new(|msg: &Message| {
-            println!("Debug callback: {:?}", msg.description);
-        }));
-        let _callback = unsafe { DebugUtilsMessenger::new(instance, debug_create_info) };
+        let debug_create_info =
+            DebugUtilsMessengerCreateInfo::user_callback(Arc::new(|msg: &Message| {
+                println!("Debug callback: {:?}", msg.description);
+            }));
+        let _callback = unsafe { DebugUtilsMessenger::new(instance.clone(), debug_create_info) };
 
         let window = WindowBuilder::new()
             .with_title("PoritzCraft")

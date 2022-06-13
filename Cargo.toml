@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 # https://github.com/vulkano-rs/vulkano/issues/1858
+# https://github.com/vulkano-rs/vulkano/pull/1884
 vulkano = { git = "https://github.com/vulkano-rs/vulkano" }
 vulkano-shaders = { git = "https://github.com/vulkano-rs/vulkano" }
 vulkano-win =  { git = "https://github.com/vulkano-rs/vulkano" }

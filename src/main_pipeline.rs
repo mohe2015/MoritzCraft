@@ -7,7 +7,9 @@ use nalgebra::{
 use rand::Rng;
 use vulkano::{
     buffer::{BufferUsage, CpuBufferPool, ImmutableBuffer, TypedBufferAccess},
-    command_buffer::{AutoCommandBufferBuilder, CommandBufferUsage, SubpassContents},
+    command_buffer::{
+        AutoCommandBufferBuilder, CommandBufferUsage, RenderPassBeginInfo, SubpassContents,
+    },
     descriptor_set::{
         layout::{
             DescriptorSetLayout, DescriptorSetLayoutCreateInfo, DescriptorSetLayoutCreationError,
@@ -668,9 +670,11 @@ impl MainPipeline {
         .unwrap();
         builder
             .begin_render_pass(
-                self.framebuffers[image_num].clone(),
+                RenderPassBeginInfo {
+                    clear_values: vec![Some([0.0, 0.0, 1.0, 1.0].into()), Some(1.0f32.into())],
+                    ..RenderPassBeginInfo::framebuffer(self.framebuffers[image_num].clone())
+                },
                 SubpassContents::Inline,
-                vec![[0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
             )
             .unwrap()
             .bind_pipeline_graphics(self.pipeline.clone())
