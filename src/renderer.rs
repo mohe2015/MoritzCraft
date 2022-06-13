@@ -7,13 +7,15 @@
 // notice may not be copied, modified, or distributed except
 // according to those terms.
 
+use std::sync::Arc;
+
 use crate::main_pipeline::MainPipeline;
 
 use vulkano::device::physical::{PhysicalDevice, PhysicalDeviceType};
 use vulkano::device::{DeviceCreateInfo, DeviceExtensions, Features, QueueCreateInfo};
 use vulkano::image::ImageUsage;
-use vulkano::instance::debug::DebugCallback;
-use vulkano::instance::{Instance, InstanceCreateInfo, layers_list};
+use vulkano::instance::debug::{DebugUtilsMessenger, DebugUtilsMessengerCreateInfo, Message};
+use vulkano::instance::{layers_list, Instance, InstanceCreateInfo};
 
 use vulkano::{
     device::Device,
@@ -30,7 +32,7 @@ pub struct PoritzCraftRenderer {
 impl PoritzCraftRenderer {
     pub fn new(event_loop: &EventLoop<()>) -> Self {
         let required_extensions = vulkano_win::required_extensions();
-        
+
         println!("List of Vulkan debugging layers available to use:");
         let mut layers = layers_list().unwrap();
         while let Some(l) = layers.next() {
@@ -44,9 +46,10 @@ impl PoritzCraftRenderer {
         })
         .unwrap();
 
-        let _callback = DebugCallback::errors_and_warnings(&instance, |msg| {
+        let debug_create_info = DebugUtilsMessengerCreateInfo::user_callback(Arc::new(|msg: &Message| {
             println!("Debug callback: {:?}", msg.description);
-        }).ok();
+        }));
+        let _callback = unsafe { DebugUtilsMessenger::new(instance, debug_create_info) };
 
         let window = WindowBuilder::new()
             .with_title("PoritzCraft")
@@ -94,7 +97,6 @@ impl PoritzCraftRenderer {
                     .required_extensions()
                     .union(&device_extensions),
                 enabled_features: Features {
-                    
                     sampler_anisotropy: true,
                     descriptor_indexing: true,
                     descriptor_binding_variable_descriptor_count: true,
