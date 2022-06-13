@@ -82,8 +82,10 @@ impl PoritzCraftRenderer {
                     .union(&device_extensions),
                 enabled_features: Features {
                     sampler_anisotropy: true,
+                    descriptor_indexing: true,
                     descriptor_binding_variable_descriptor_count: true,
                     // https://chunkstories.xyz/blog/a-note-on-descriptor-indexing/
+                    // vulkaninfo
                     shader_sampled_image_array_dynamic_indexing: true,
                     shader_sampled_image_array_non_uniform_indexing: true,
                     runtime_descriptor_array: true,
