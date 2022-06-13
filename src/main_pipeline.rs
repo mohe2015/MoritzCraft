@@ -735,10 +735,13 @@ fn window_size_dependent_setup(
 
     let pipeline_layout = {
         let mut layout_create_infos: Vec<_> = DescriptorSetLayoutCreateInfo::from_requirements(
-            fs.entry_point("main").unwrap().descriptor_requirements(),
+            fs.entry_point("main")
+                .unwrap()
+                .descriptor_requirements()
+                .chain(vs.entry_point("main").unwrap().descriptor_requirements()),
         );
 
-        // Set 0, Binding 0
+        println!("{:#?}", layout_create_infos);
         let binding = layout_create_infos[1].bindings.get_mut(&0).unwrap();
         binding.variable_descriptor_count = true;
         binding.descriptor_count = 2;
