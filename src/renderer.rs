@@ -47,6 +47,7 @@ impl PoritzCraftRenderer {
 
         let device_extensions = DeviceExtensions {
             khr_swapchain: true,
+            ext_descriptor_indexing: true,
             ..DeviceExtensions::none()
         };
         let (physical_device, queue_family) = PhysicalDevice::enumerate(&instance)
@@ -82,6 +83,9 @@ impl PoritzCraftRenderer {
                 enabled_features: Features {
                     sampler_anisotropy: true,
                     descriptor_binding_variable_descriptor_count: true,
+                    // https://chunkstories.xyz/blog/a-note-on-descriptor-indexing/
+                    shader_sampled_image_array_dynamic_indexing: true,
+                    shader_sampled_image_array_non_uniform_indexing: true,
                     runtime_descriptor_array: true,
                     ..Features::none()
                 },
