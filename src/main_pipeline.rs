@@ -17,8 +17,8 @@ use vulkano::{
     device::{Device, Queue},
     format::Format,
     image::{
-        view::ImageView, AttachmentImage, ImageAccess, ImageDimensions, ImmutableImage,
-        MipmapsCount, SwapchainImage,
+        view::ImageView, AttachmentImage, ImageAccess, ImageDimensions, ImageViewAbstract,
+        ImmutableImage, MipmapsCount, SwapchainImage,
     },
     pipeline::{
         graphics::{
@@ -55,7 +55,7 @@ pub struct MainPipeline {
     fs: Arc<ShaderModule>,
     render_pass: Arc<RenderPass>,
     sampler: Arc<Sampler>,
-    texture: Arc<ImageView<ImmutableImage>>,
+    textures: Vec<(Arc<dyn ImageViewAbstract>, Arc<Sampler>)>,
     framebuffers: Vec<Arc<Framebuffer>>,
     uniform_buffer: CpuBufferPool<vs::ty::Data>,
     previous_frame_end: Option<Box<dyn GpuFuture>>,
@@ -508,8 +508,11 @@ impl MainPipeline {
             instance_buffer,
             pipeline,
             uniform_buffer,
+            textures: vec![
+                (dirt_texture.clone() as _, sampler.clone()),
+                (dirt_texture.clone() as _, sampler.clone()),
+            ],
             sampler,
-            texture: dirt_texture,
             framebuffers,
             fs,
             vs,
@@ -623,10 +626,7 @@ impl MainPipeline {
             [WriteDescriptorSet::image_view_sampler_array(
                 0,
                 0,
-                [
-                    (self.texture.clone() as _, self.sampler.clone()),
-                    (self.texture.clone() as _, self.sampler.clone()),
-                ],
+                self.textures.clone(),
             )],
         )
         .unwrap();
