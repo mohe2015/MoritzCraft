@@ -82,6 +82,7 @@ impl PoritzCraftRenderer {
                 enabled_features: Features {
                     sampler_anisotropy: true,
                     descriptor_binding_variable_descriptor_count: true,
+                    runtime_descriptor_array: true,
                     ..Features::none()
                 },
                 queue_create_infos: vec![QueueCreateInfo::family(queue_family)],

@@ -22,8 +22,9 @@ impl_vertex!(Vertex, position);
 #[derive(Clone, Copy, Debug, Default, Zeroable, Pod)]
 pub struct InstanceData {
     pub position_offset: [f32; 3],
+    pub block_type: u32,
 }
-impl_vertex!(InstanceData, position_offset);
+impl_vertex!(InstanceData, position_offset, block_type);
 
 pub const SIZE: f32 = 10.0;
 
