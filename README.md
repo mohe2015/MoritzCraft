@@ -1,3 +1,7 @@
+vulkan-validation-layers
+amd radv vs amdvlk
+lavapipe (vulkan-swrast)
+
 // https://arewegameyet.rs/ecosystem/math/
 
 // https://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/

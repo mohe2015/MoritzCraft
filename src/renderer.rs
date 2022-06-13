@@ -76,7 +76,7 @@ impl PoritzCraftRenderer {
                     })
                     .map(|q| (p, q))
             })
-            .min_by_key(|(p, _)| match p.properties().device_type {
+            .max_by_key(|(p, _)| match p.properties().device_type {
                 PhysicalDeviceType::DiscreteGpu => 0,
                 PhysicalDeviceType::IntegratedGpu => 1,
                 PhysicalDeviceType::VirtualGpu => 2,

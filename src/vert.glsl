@@ -11,7 +11,7 @@ layout(location = 4) in uint block_type;
 
 layout(location = 0) flat out vec3 v_normal;
 layout(location = 1) out vec2 v_tex_coord;
-layout(location = 2) flat out uint v_block_type;
+layout(location = 2) out flat uint v_block_type;
 
 layout(set = 0, binding = 0) uniform Data {
     mat4 world;

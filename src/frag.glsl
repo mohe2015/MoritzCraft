@@ -4,7 +4,7 @@
 
 layout(location = 0) flat in vec3 v_normal;
 layout(location = 1) in vec2 tex_coords;
-layout(location = 2) flat in uint v_block_type;
+layout(location = 2) in flat uint v_block_type;
 
 layout(location = 0) out vec4 f_color;
 

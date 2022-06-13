@@ -853,6 +853,8 @@ mod vs {
 mod fs {
     vulkano_shaders::shader! {
         ty: "fragment",
-        path: "src/frag.glsl"
+        path: "src/frag.glsl",
+        vulkan_version: "1.2",
+        spirv_version: "1.5",
     }
 }
