@@ -1,17 +1,32 @@
+use serde::{Serialize, Deserialize};
+
+pub trait Chunk {
+    fn get_block(&self, x: usize, y: usize, z: usize) -> Option<&Block>;
+}
+
 const CHUNK_SIZE: usize = 32;
 
-struct ChestContents {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ChestContents {
 
 }
 
-enum Block {
+#[derive(Serialize, Deserialize, Debug)]
+pub enum Block {
     Dirt,
     Stone,
     Chest(Box<ChestContents>),
 }
 
-struct Chunk {
-    data: [[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DenseChunk {
+    data: [[[Option<Block>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE]
+}
+
+impl Chunk for DenseChunk {
+    fn get_block(&self, x: usize, y: usize, z: usize) -> Option<&Block> {
+        return self.data[x][y][z].as_ref();
+    }
 }
 
 // what we need:

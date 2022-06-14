@@ -1,4 +1,4 @@
-use std::{io::Cursor, sync::Arc, time::Instant};
+use std::{io::{Cursor, BufReader}, sync::Arc, time::Instant, fs::File};
 
 use nalgebra::{
     Affine3, Isometry3, IsometryMatrix3, Matrix4, Point3, Quaternion, Rotation3, Translation,
@@ -44,7 +44,7 @@ use vulkano::{
 };
 use winit::window::Window;
 
-use crate::utils::{repeat_element, InstanceData, Normal, TexCoord, Vertex, SIZE};
+use crate::{utils::{repeat_element, InstanceData, Normal, TexCoord, Vertex, SIZE}, data::DenseChunk};
 
 pub struct MainPipeline {
     vertex_buffer: Arc<ImmutableBuffer<[Vertex]>>,
@@ -405,6 +405,13 @@ impl MainPipeline {
         let mut rng = rand::thread_rng();
 
         // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+
+        let file = File::open("world.chunk").unwrap();
+        let reader = BufReader::new(file);
+    
+        let u: DenseChunk = serde_json::from_reader(reader).unwrap();
+    
+
 
         let instances = {
             let mut data = Vec::new();

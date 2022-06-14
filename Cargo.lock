@@ -1106,6 +1106,8 @@ dependencies = [
  "nalgebra",
  "png",
  "rand",
+ "serde",
+ "serde_json",
  "vulkano",
  "vulkano-shaders",
  "vulkano-win",
