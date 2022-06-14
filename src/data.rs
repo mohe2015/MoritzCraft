@@ -37,12 +37,17 @@ impl Chunk for DenseChunk {
     fn instance_data_iter<'a>(&'a self) -> Box<dyn Iterator<Item = InstanceData> + 'a> {
         Box::new(self.data.iter().enumerate().flat_map(|(x, b)| {
             b.iter().enumerate().flat_map(move |(y, d)| {
-                d.iter().enumerate().map(move |(z,f)| {
-                    InstanceData {
-                        block_type: 1,
+                d.iter()
+                    .enumerate()
+                    .filter_map(|(a, b)| b.as_ref().map(|v| (a, v)))
+                    .map(move |(z, f)| InstanceData {
+                        block_type: match f {
+                            Block::Dirt => 1,
+                            Block::Stone => 2,
+                            _ => 2,
+                        },
                         position_offset: [x as f32 * 20.0, y as f32 * 20.0, z as f32 * 20.0],
-                    }
-                })
+                    })
             })
         }))
     }
