@@ -411,8 +411,6 @@ impl MainPipeline {
     
         let u: DenseChunk = serde_json::from_reader(reader).unwrap();
     
-
-
         let instances = {
             let mut data = Vec::new();
             for x in 0..100 {
@@ -434,6 +432,7 @@ impl MainPipeline {
             }
             data
         };
+
         let (instance_buffer, instance_buffer_future) =
             ImmutableBuffer::from_iter(instances, BufferUsage::all(), queue.clone()).unwrap();
 

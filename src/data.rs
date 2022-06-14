@@ -2,6 +2,7 @@ use serde::{Serialize, Deserialize};
 
 pub trait Chunk {
     fn get_block(&self, x: usize, y: usize, z: usize) -> Option<&Block>;
+    fn set_block(&self, x: usize, y: usize, z: usize, block: Option<Block>);
 }
 
 const CHUNK_SIZE: usize = 32;
@@ -26,6 +27,10 @@ pub struct DenseChunk {
 impl Chunk for DenseChunk {
     fn get_block(&self, x: usize, y: usize, z: usize) -> Option<&Block> {
         return self.data[x][y][z].as_ref();
+    }
+
+    fn set_block(&self, x: usize, y: usize, z: usize, block: Option<Block>) {
+        self.data[x][y][z] = block;
     }
 }
 
