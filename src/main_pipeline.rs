@@ -415,7 +415,9 @@ impl MainPipeline {
         {
             let file = File::create("world.chunk").unwrap();
             let writer = BufWriter::new(file);
-            let chunk = DenseChunk::default();
+            let chunk = Box::<DenseChunk>::default();
+
+            serde_json::to_writer_pretty(writer, &chunk).unwrap();
         }
 
         // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
@@ -423,7 +425,7 @@ impl MainPipeline {
         let file = File::open("world.chunk").unwrap();
         let reader = BufReader::new(file);
 
-        let u: DenseChunk = serde_json::from_reader(reader).unwrap();
+        let u: Box<DenseChunk> = serde_json::from_reader(reader).unwrap();
 
         let instances = {
             let mut data = Vec::new();

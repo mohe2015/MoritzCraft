@@ -5,7 +5,7 @@ pub trait Chunk {
     fn set_block(&mut self, x: usize, y: usize, z: usize, block: Option<Block>);
 }
 
-const CHUNK_SIZE: usize = 32;
+const CHUNK_SIZE: usize = 16;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ChestContents {}
