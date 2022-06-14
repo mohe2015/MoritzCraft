@@ -51,7 +51,7 @@ use winit::window::Window;
 
 use crate::{
     data::{Chunk, DenseChunk},
-    utils::{repeat_element, InstanceData, Normal, TexCoord, Vertex, SIZE},
+    utils::{repeat_element, InstanceData, Normal, TexCoord, Vertex, SIZE}, worldgen::{RandomWorldGeneration, WorldGeneration},
 };
 
 pub struct MainPipeline {
@@ -412,15 +412,18 @@ impl MainPipeline {
 
         let mut rng = rand::thread_rng();
 
-        /*
+        
         {
             let file = File::create("world.chunk").unwrap();
             let writer = BufWriter::new(file);
-            let chunk = Box::<DenseChunk>::default();
+            let mut chunk = Box::<DenseChunk>::default();
+
+            let worldgen = RandomWorldGeneration {};
+            worldgen.generate_chunk(&mut chunk, 0, 0); 
 
             serde_json::to_writer_pretty(writer, &chunk).unwrap();
         }
-        */
+        
 
         // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
 
