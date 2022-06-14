@@ -1,16 +1,14 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub trait Chunk {
     fn get_block(&self, x: usize, y: usize, z: usize) -> Option<&Block>;
-    fn set_block(&self, x: usize, y: usize, z: usize, block: Option<Block>);
+    fn set_block(&mut self, x: usize, y: usize, z: usize, block: Option<Block>);
 }
 
 const CHUNK_SIZE: usize = 32;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ChestContents {
-
-}
+pub struct ChestContents {}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Block {
@@ -19,9 +17,9 @@ pub enum Block {
     Chest(Box<ChestContents>),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 pub struct DenseChunk {
-    data: [[[Option<Block>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE]
+    data: [[[Option<Block>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
 }
 
 impl Chunk for DenseChunk {
@@ -29,7 +27,7 @@ impl Chunk for DenseChunk {
         return self.data[x][y][z].as_ref();
     }
 
-    fn set_block(&self, x: usize, y: usize, z: usize, block: Option<Block>) {
+    fn set_block(&mut self, x: usize, y: usize, z: usize, block: Option<Block>) {
         self.data[x][y][z] = block;
     }
 }
