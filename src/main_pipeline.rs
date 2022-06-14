@@ -50,7 +50,7 @@ use vulkano::{
 use winit::window::Window;
 
 use crate::{
-    data::DenseChunk,
+    data::{Chunk, DenseChunk},
     utils::{repeat_element, InstanceData, Normal, TexCoord, Vertex, SIZE},
 };
 
@@ -412,6 +412,7 @@ impl MainPipeline {
 
         let mut rng = rand::thread_rng();
 
+        /*
         {
             let file = File::create("world.chunk").unwrap();
             let writer = BufWriter::new(file);
@@ -419,6 +420,7 @@ impl MainPipeline {
 
             serde_json::to_writer_pretty(writer, &chunk).unwrap();
         }
+        */
 
         // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
 
@@ -426,28 +428,9 @@ impl MainPipeline {
         let reader = BufReader::new(file);
 
         let u: Box<DenseChunk> = serde_json::from_reader(reader).unwrap();
+        let instances = u.instance_data_iter().collect::<Vec<InstanceData>>();
 
-        let instances = {
-            let mut data = Vec::new();
-            for x in 0..100 {
-                for y in 0..1 {
-                    for z in 0..100 {
-                        /*data.push(InstanceData {
-                            position_offset: [
-                                rng.gen_range(0..1000) as f32 * 20.0,
-                                rng.gen_range(0..100) as f32 * 20.0,
-                                rng.gen_range(0..1000) as f32 * 20.0,
-                            ],
-                        });*/
-                        data.push(InstanceData {
-                            position_offset: [x as f32 * 20.0, y as f32 * 20.0, z as f32 * 20.0],
-                            block_type: rng.gen_range(0..=1),
-                        });
-                    }
-                }
-            }
-            data
-        };
+        println!("{:#?}", &instances);
 
         let (instance_buffer, instance_buffer_future) =
             ImmutableBuffer::from_iter(instances, BufferUsage::all(), queue.clone()).unwrap();

@@ -1,8 +1,11 @@
 use serde::{Deserialize, Serialize};
 
+use crate::utils::InstanceData;
+
 pub trait Chunk {
     fn get_block(&self, x: usize, y: usize, z: usize) -> Option<&Block>;
     fn set_block(&mut self, x: usize, y: usize, z: usize, block: Option<Block>);
+    fn instance_data_iter<'a>(&'a self) -> Box<dyn Iterator<Item = InstanceData> + 'a>;
 }
 
 const CHUNK_SIZE: usize = 16;
@@ -29,6 +32,13 @@ impl Chunk for DenseChunk {
 
     fn set_block(&mut self, x: usize, y: usize, z: usize, block: Option<Block>) {
         self.data[x][y][z] = block;
+    }
+
+    fn instance_data_iter<'a>(&'a self) -> Box<dyn Iterator<Item = InstanceData> + 'a> {
+        return Box::new(self.data.iter().flatten().flatten().map(|e| InstanceData {
+            block_type: 1,
+            position_offset: [0.0, 0.0, 0.0],
+        }));
     }
 }
 
