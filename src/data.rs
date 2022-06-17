@@ -42,9 +42,9 @@ impl Chunk for DenseChunk {
                     .filter_map(|(a, b)| b.as_ref().map(|v| (a, v)))
                     .map(move |(z, f)| InstanceData {
                         block_type: match f {
-                            Block::Dirt => 1,
-                            Block::Stone => 2,
-                            _ => 2,
+                            Block::Dirt => 0,
+                            Block::Stone => 1,
+                            _ => 1,
                         },
                         position_offset: [x as f32 * 20.0, y as f32 * 20.0, z as f32 * 20.0],
                     })

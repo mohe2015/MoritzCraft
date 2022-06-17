@@ -432,7 +432,7 @@ impl MainPipeline {
         let u: Box<DenseChunk> = serde_json::from_reader(reader).unwrap();
         let instances = u.instance_data_iter().collect::<Vec<InstanceData>>();
 
-        println!("{:#?}", &instances);
+        //println!("{:#?}", &instances);
 
         let (instance_buffer, instance_buffer_future) =
             ImmutableBuffer::from_iter(instances, BufferUsage::all(), queue.clone()).unwrap();

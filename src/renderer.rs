@@ -33,7 +33,7 @@ impl PoritzCraftRenderer {
     pub fn new(event_loop: &EventLoop<()>) -> Self {
         let required_extensions = vulkano_win::required_extensions();
 
-        println!("List of Vulkan debugging layers available to use:");
+        //println!("List of Vulkan debugging layers available to use:");
         let mut layers = layers_list().unwrap();
         while let Some(l) = layers.next() {
             //println!("\t{}", l.name());
