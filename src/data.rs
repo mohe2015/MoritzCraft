@@ -43,12 +43,14 @@ impl Chunk for DenseChunk {
                     .enumerate()
                     .filter_map(|(a, b)| b.as_ref().map(|v| (a, v)))
                     .map(move |(z, f)| {
-                        let right_air = self.data[x + 1][y][z].is_none();
-                        let left_air = self.data[x - 1][y][z].is_none();
-                        let down_air = self.data[x][y + 1][z].is_none();
-                        let up_air = self.data[x][y - 1][z].is_none();
-                        let back_air = self.data[x][y][z + 1].is_none();
-                        let front_air = self.data[x][y][z + 1].is_none();
+                        let right_air =
+                            x + 1 == self.data.len() || self.data[x + 1][y][z].is_none();
+                        let left_air = x == 0 || self.data[x - 1][y][z].is_none();
+                        let down_air = y + 1 == self.data.len() || self.data[x][y + 1][z].is_none();
+                        let up_air = y == 0 || self.data[x][y - 1][z].is_none();
+                        let back_air =
+                            z + 1 == self.data[x][y].len() || self.data[x][y][z + 1].is_none();
+                        let front_air = z == 0 || self.data[x][y][z - 1].is_none();
                         let bitcode = [right_air, left_air, down_air, up_air, back_air, front_air]
                             .iter()
                             .fold(0, |result, &bit| (result << 1) ^ (bit as u8));

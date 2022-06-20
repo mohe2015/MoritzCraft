@@ -441,7 +441,8 @@ impl MainPipeline {
         //println!("{:#?}", &instances);
 
         let (instance_buffer, instance_buffer_future) =
-            ImmutableBuffer::from_iter(instances[0].clone(), BufferUsage::all(), queue.clone()).unwrap();
+            ImmutableBuffer::from_iter(instances[0].clone(), BufferUsage::all(), queue.clone())
+                .unwrap();
 
         let uniform_buffer = CpuBufferPool::<vs::ty::Data>::new(device.clone(), BufferUsage::all());
 
