@@ -57,7 +57,7 @@ impl PoritzCraftRenderer {
             .build(event_loop)
             .unwrap();
 
-        window.set_cursor_grab(true).unwrap();
+        window.set_cursor_grab(true);
         window.set_cursor_visible(false);
 
         let surface = vulkano_win::create_surface_from_handle(window, instance.clone()).unwrap();

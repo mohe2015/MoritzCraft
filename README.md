@@ -1,3 +1,8 @@
+
+
+ WINIT_UNIX_BACKEND=x11 QT_QPA_PLATFORM=xcb qrenderdoc
+
+
 vulkan-validation-layers
 amd radv vs amdvlk
 lavapipe (vulkan-swrast)

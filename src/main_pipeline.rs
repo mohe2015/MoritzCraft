@@ -682,6 +682,7 @@ impl MainPipeline {
             CommandBufferUsage::OneTimeSubmit,
         )
         .unwrap();
+
         builder
             .begin_render_pass(
                 RenderPassBeginInfo {
@@ -712,16 +713,19 @@ impl MainPipeline {
                     self.texture_coordinate_buffer.clone(),
                     self.instance_buffer.clone(),
                 ),
-            )
-            .draw(
-                self.vertex_buffer.len() as u32,
-                self.instance_buffer.len() as u32,
-                0,
-                0,
-            )
-            .unwrap()
-            .end_render_pass()
-            .unwrap();
+            );
+
+        for i in 0..64 {
+            builder
+                .draw(
+                    self.vertex_buffer.len() as u32,
+                    self.instance_buffer.len() as u32,
+                    0,
+                    0,
+                )
+                .unwrap();
+        }
+        builder.end_render_pass().unwrap();
         let command_buffer = builder.build().unwrap();
 
         let future = self
