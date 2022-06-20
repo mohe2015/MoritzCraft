@@ -10,7 +10,7 @@ layout(location = 0) out vec4 f_color;
 
 layout(set = 1, binding = 0) uniform sampler2D tex[];
 
-const vec3 LIGHT = vec3(1.0, 5.0, 1.0);
+const vec3 LIGHT = vec3(1.0, -5.0, 1.0);
 
 void main() {
     float brightness = clamp(dot(normalize(v_normal), normalize(LIGHT)), 0.6, 1);
