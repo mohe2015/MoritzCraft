@@ -5,7 +5,9 @@ use crate::utils::InstanceData;
 pub trait Chunk {
     fn get_block(&self, x: usize, y: usize, z: usize) -> Option<&Block>;
     fn set_block(&mut self, x: usize, y: usize, z: usize, block: Option<Block>);
-    fn instance_data_iter<'a>(&'a self) -> Box<dyn Iterator<Item = InstanceData> + 'a>;
+    // the bits of the u8 tell whether there is air on that side
+    // the bits are the sides in order: top, bottom, ... TODO
+    fn instance_data_iter<'a>(&'a self) -> Box<dyn Iterator<Item = (u8, InstanceData)> + 'a>;
 }
 
 const CHUNK_SIZE: usize = 16;
@@ -34,19 +36,37 @@ impl Chunk for DenseChunk {
         self.data[x][y][z] = block;
     }
 
-    fn instance_data_iter<'a>(&'a self) -> Box<dyn Iterator<Item = InstanceData> + 'a> {
+    fn instance_data_iter<'a>(&'a self) -> Box<dyn Iterator<Item = (u8, InstanceData)> + 'a> {
         Box::new(self.data.iter().enumerate().flat_map(|(x, b)| {
             b.iter().enumerate().flat_map(move |(y, d)| {
                 d.iter()
                     .enumerate()
                     .filter_map(|(a, b)| b.as_ref().map(|v| (a, v)))
-                    .map(move |(z, f)| InstanceData {
-                        block_type: match f {
-                            Block::Dirt => 0,
-                            Block::Stone => 1,
-                            _ => 1,
-                        },
-                        position_offset: [x as f32 * 20.0, y as f32 * 20.0, z as f32 * 20.0],
+                    .map(move |(z, f)| {
+                        let right_air = self.data[x + 1][y][z].is_none();
+                        let left_air = self.data[x - 1][y][z].is_none();
+                        let down_air = self.data[x][y + 1][z].is_none();
+                        let up_air = self.data[x][y - 1][z].is_none();
+                        let back_air = self.data[x][y][z + 1].is_none();
+                        let front_air = self.data[x][y][z + 1].is_none();
+                        let bitcode = [right_air, left_air, down_air, up_air, back_air, front_air]
+                            .iter()
+                            .fold(0, |result, &bit| (result << 1) ^ (bit as u8));
+                        return (
+                            bitcode,
+                            InstanceData {
+                                block_type: match f {
+                                    Block::Dirt => 0,
+                                    Block::Stone => 1,
+                                    _ => 1,
+                                },
+                                position_offset: [
+                                    x as f32 * 20.0,
+                                    y as f32 * 20.0,
+                                    z as f32 * 20.0,
+                                ],
+                            },
+                        );
                     })
             })
         }))

@@ -430,12 +430,18 @@ impl MainPipeline {
         let reader = BufReader::new(file);
 
         let u: Box<DenseChunk> = serde_json::from_reader(reader).unwrap();
-        let instances = u.instance_data_iter().collect::<Vec<InstanceData>>();
+
+        const INIT: Vec<InstanceData> = Vec::new();
+        let mut instances: [Vec<InstanceData>; 64] = [INIT; 64];
+
+        u.instance_data_iter().for_each(|(i, v)| {
+            instances[i as usize].push(v);
+        });
 
         //println!("{:#?}", &instances);
 
         let (instance_buffer, instance_buffer_future) =
-            ImmutableBuffer::from_iter(instances, BufferUsage::all(), queue.clone()).unwrap();
+            ImmutableBuffer::from_iter(instances[0], BufferUsage::all(), queue.clone()).unwrap();
 
         let uniform_buffer = CpuBufferPool::<vs::ty::Data>::new(device.clone(), BufferUsage::all());
 
